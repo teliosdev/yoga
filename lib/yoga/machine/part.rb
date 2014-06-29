@@ -1,3 +1,4 @@
+require "digest/sha1"
 require "securerandom"
 
 module Yoga
@@ -6,17 +7,28 @@ module Yoga
 
       attr_accessor :accepting
       attr_accessor :transitions
-      attr_accessor :nfa_parts
+      attr_accessor :parts
       attr_reader :id
 
       def initialize
         @accepting = false
         @transitions = {}
         @id = SecureRandom.hex
+        @parts = Set.new
       end
 
-      def accepting!
-        @accepting = !@accepting
+      def rehash_transitions(machine)
+        transitions = {}
+        @transitions.each do |key, value|
+          other = machine.parts.find { |_| _ == value }
+          transitions[key] = other
+        end
+
+        @transitions = transitions
+      end
+
+      def accepting!(new_value = !@accepting)
+        @accepting = new_value
       end
 
       def transitions_on(char)
@@ -27,8 +39,15 @@ module Yoga
         false
       end
 
+      def ==(other)
+        self.class === other &&
+        transitions == other.transitions &&
+        parts == other.parts &&
+        accepting == other.accepting
+      end
+
       def to_s
-        "<#{self.class} #{@id[0..9]} transitions=#{transitions.keys.inspect} accepting=#{accepting}>"
+        "<#{self.class} #{id[0..9]} transitions=#{transitions.keys.inspect} accepting=#{accepting}>"
       end
 
       alias_method :inspect, :to_s

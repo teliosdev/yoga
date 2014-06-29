@@ -16,15 +16,9 @@ digraph machine {
 <% parts.each do |part| -%>
   p<%= part.id %> [label="<%= part.id[0..9] %>" <% if part.accepting %> shape="box" <% end %>];
 <%   part.transitions.each do |on, to| %>
-<%     if on.is_a? Epsilon -%>
-    p<%= part.id %> -> p<%= to.id %> [label="ε" color="green"]
-<%     elsif on.is_a? Exclusion -%>
-    p<%= part.id %> -> p<%= to.id %> [label="Σ - '<%= on.to_a.join("', '") %>'"]
-<%     else -%>
-    p<%= part.id %> -> p<%= to.id %> [label="'<%= on.to_a.join("', '") %>'"]
-<%     end -%>
+    p<%= part.id %> -> p<%= to.id %> [label="<%= on.to_s %>"]
 <%   end -%>
 <% end -%>
 
-  alphabet [label="alphabet: \n'<%= alphabet.to_a.join("', '") %>'" shape="box" fontsize=8.0];
+  alphabet [label="alphabet: \n<%= stringify_alphabet %>" shape="box" fontsize=8.0];
 }

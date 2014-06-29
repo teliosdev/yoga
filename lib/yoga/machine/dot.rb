@@ -8,9 +8,15 @@ module Yoga
         src_file = File.expand_path("../machine.erb", __FILE__)
         src = File.open(src_file, "r")
         context = instance_eval('binding')
-        content = ERB.new(src.read, nil, "-").result(context)
+        erb = ERB.new(src.read, nil, "-")
+        erb.filename = "machine.erb"
+        content = erb.result(context)
 
         File.open("#{out}.dot", "w") { |f| f.write(content) }
+      end
+
+      def stringify_alphabet
+        Transitionable.stringify_alphabet(alphabet)
       end
     end
   end

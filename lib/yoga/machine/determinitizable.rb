@@ -6,8 +6,12 @@ module Yoga
         return self if deterministic?
         machine = Machine.new
         prune
-        raise unless starting.size == 1
-        determinize_parts(machine, starting[0])
+        unless starting.size == 1
+          raise ArgumentError, "Number of starting parts " \
+            "too high (got #{starting.size}, expected " \
+            "1)"
+        end
+        determinize_parts(machine, starting.first)
         machine.parts << STUCK_PART
         machine.optimize_transitions
         machine.optimize_stuck
@@ -18,16 +22,16 @@ module Yoga
         parts = closure([parts].flatten.to_set)
 
         if determinital = machine.parts.
-          find { |p| p.nfa_parts == parts }
+          find { |p| p.parts == parts }
           return determinital
         end
 
         new_part = machine.create_part
-        new_part.nfa_parts = parts
+        new_part.parts = parts
         new_part.accepting! if parts.any?(&:accepting)
 
         alphabet.each do |char|
-          moves = move(new_part.nfa_parts, char)
+          moves = move(new_part.parts, char)
           if moves.empty?
             transition = STUCK_PART
           else
@@ -61,6 +65,7 @@ module Yoga
 
           epsilons
         end
+
         epsilons
       end
 

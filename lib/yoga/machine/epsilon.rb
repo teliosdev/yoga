@@ -17,6 +17,14 @@ module Yoga
       def each(*a, &b)
         @content.each(*a, &b)
       end
+
+      def to_s
+        "ε"
+      end
+
+      def inspect
+        "#<#{self.class}>"
+      end
     end
   end
 end

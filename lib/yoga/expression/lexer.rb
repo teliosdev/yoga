@@ -18,17 +18,16 @@ module Yoga
       end
 
       def scan_part
+        scan_operator   ||
         scan_string     ||
         scan_number     ||
-        scan_contain    ||
-        scan_identifier ||
-        scan_operator   ||
+        scan_character  ||
         scan_whitespace ||
         error!
       end
 
       def scan_number
-        if @scanner.scan(/(-?[0-9]+)/)
+        if @scanner.scan(/([0-9]+)/)
           tokens << [:NUMBER, @scanner[1]]
         end
       end
@@ -46,7 +45,12 @@ module Yoga
 
       def scan_double_string
         if @scanner.scan(/"((?:\\"|[^"])+)"/)
-          tokens << [:STRING, @scanner[1]]
+          tokens << [:STRING,
+            @scanner[1].gsub(/\\[\\0abtnvfr]/, "\\0" => "\0",
+              "\\a" => "\a", "\\b" => "\b", "\\t" => "\t",
+              "\\n" => "\n", "\\v" => "\v", "\\f" => "\f",
+              "\\r" => "\r", "\\\\" => "\\")
+          ]
         end
       end
 
@@ -69,6 +73,14 @@ module Yoga
           tokens << [:LPAREN]
         elsif @scanner.scan(/\)/)
           tokens << [:RPAREN]
+        elsif @scanner.scan(/\[/)
+          tokens << [:LBRACK]
+        elsif @scanner.scan(/\]/)
+          tokens << [:RBRACK]
+        elsif @scanner.scan(/\\"/)
+          tokens << [:ESCAPED]
+        elsif @scanner.scan(/\\'/)
+          tokens << [:ESCAPED]
         else
           scan_repetition
         end
@@ -83,15 +95,9 @@ module Yoga
         end
       end
 
-      def scan_contain
-        if @scanner.scan(/\[(.*?)\]/)
-          tokens << [:CONTAIN, @scanner[1]]
-        end
-      end
-
-      def scan_identifier
-        if @scanner.scan(/([A-Za-z_][A-Za-z0-9_-]*)/)
-          tokens << [:IDENTIFIER, @scanner[1]]
+      def scan_character
+        if @scanner.scan(/([A-Za-z_])/)
+          tokens << [:CHARACTER, @scanner[1]]
         end
       end
 

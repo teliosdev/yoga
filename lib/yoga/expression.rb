@@ -1,6 +1,7 @@
 require "yoga/expression/lexer"
 require "yoga/expression/parser"
 require "yoga/expression/compiler"
+require "yoga/expression/default_expressions"
 
 module Yoga
 
@@ -11,9 +12,11 @@ module Yoga
     include Lexer
     include Parser
     include Compiler
+    include DefaultExpressions
 
-    def initialize(body)
+    def initialize(body, definitions = {})
       @body = body
+      @definitions = definitions
     end
 
     def build!

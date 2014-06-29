@@ -3,7 +3,7 @@ require 'pp'
 module Yoga
   class Machine
     module Optimizable
-      def optimize_transitions
+      def optimize_transitions(allow_exclusion = false)
         parts.each do |part|
           transitionables = part.transitions.group_by { |k, v| v }
           transitions = {}
@@ -21,7 +21,9 @@ module Yoga
               end
             end
 
-            if !with.is_a?(Epsilon) && with.size > (alphabet.size / 2)
+            if allow_exclusion &&
+                !with.is_a?(Epsilon) &&
+                with.size > (alphabet.size / 2)
               with = Exclusion.new(alphabet - with)
             end
 
@@ -40,7 +42,9 @@ module Yoga
           part.transitions = transitions
         end
 
-        parts.delete(STUCK_PART)
+        parts.reject! { |part| part == STUCK_PART }
+
+        self
       end
     end
   end

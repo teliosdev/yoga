@@ -1,5 +1,6 @@
 require "set"
 require "yoga/machine/part"
+require "yoga/machine/transitionable"
 require "yoga/machine/inclusion"
 require "yoga/machine/exclusion"
 require "yoga/machine/epsilon"
@@ -21,18 +22,25 @@ module Yoga
     include Optimizable
     include Dot
 
-    attr_reader :parts
+    attr_accessor :parts
 
     def initialize
       @parts = Set.new
     end
 
+    def initialize_copy(copy)
+      @parts = @parts.map(&:dup).to_set
+      @parts.each { |_| _.rehash_transitions(self) }
+    end
+
     def starting
-      @parts - @parts.map(&:transitions).map(&:values).flatten
+      (@parts - @parts.
+       map(&:transitions).
+       map(&:values).flatten).to_set
     end
 
     def accepting
-      @parts.select(&:accepting)
+      @parts.select(&:accepting).to_set
     end
 
     def create_parts(num = 2)
@@ -53,6 +61,10 @@ module Yoga
 
     def merge(other)
       parts.merge(other.parts)
+    end
+
+    def inspect
+      "#<#{self.class} #parts=#{parts.size} #starting=#{starting.size} #accepting=#{accepting.size}>"
     end
 
     def self.from(expression)
