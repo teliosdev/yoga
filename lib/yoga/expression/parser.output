@@ -1,9 +1,9 @@
-Productions:
+  Productions:
   expression → group { |_| [_]       }
   expression → group expression { |a, b| b.unshift(a) }
   group → group modifier { |a, b| [b, a] }
   group → group binop group { |a, b, c| compile_binop(b, a, c) }
-  group → value 
+  group → value
   modifier → "*" { |_| _[0] }
   modifier → "+" { |_| _[0] }
   modifier → "?" { |_| _[0] }
@@ -15,8 +15,8 @@ Productions:
   value → STRING { |_| compile_string(_)  }
   value → CONTAIN { |_| compile_contain(_) }
   value → NUMBER { |_| compile_number(_)  }
-  value → IDENTIFIER 
-  $start → expression $ 
+  value → IDENTIFIER
+  $start → expression $
 
 Precedence:
   --- highest
@@ -72,7 +72,7 @@ Precedence:
       $: State 9
 
   State 2:
-    12/n1: expression → group • 
+    12/n1: expression → group •
       {$, ")"}
     13/n1: expression → group • expression
       {}
@@ -137,7 +137,7 @@ Precedence:
       RPAREN: Rule 1
 
   State 3:
-    33/n1: group → value • 
+    33/n1: group → value •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 5
@@ -189,7 +189,7 @@ Precedence:
       IDENTIFIER: State 8
 
   State 5:
-    45/n1: value → STRING • 
+    45/n1: value → STRING •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 14
@@ -208,7 +208,7 @@ Precedence:
       RPAREN: Rule 14
 
   State 6:
-    46/n1: value → CONTAIN • 
+    46/n1: value → CONTAIN •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 15
@@ -227,7 +227,7 @@ Precedence:
       RPAREN: Rule 15
 
   State 7:
-    47/n1: value → NUMBER • 
+    47/n1: value → NUMBER •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 16
@@ -246,7 +246,7 @@ Precedence:
       RPAREN: Rule 16
 
   State 8:
-    48/n1: value → IDENTIFIER • 
+    48/n1: value → IDENTIFIER •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 17
@@ -265,20 +265,20 @@ Precedence:
       RPAREN: Rule 17
 
   State 9:
-    49/n0: $start → expression $ • 
+    49/n0: $start → expression $ •
       {}
     accepting:
       $: Rule 0
 
   State 10:
-    50/n1: expression → group expression • 
+    50/n1: expression → group expression •
       {$, ")"}
     reductions:
       $: Rule 2
       RPAREN: Rule 2
 
   State 11:
-    51/n1: group → group modifier • 
+    51/n1: group → group modifier •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 3
@@ -297,7 +297,7 @@ Precedence:
       RPAREN: Rule 3
 
   State 12:
-    52/l3: modifier → "*" • 
+    52/l3: modifier → "*" •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 6
@@ -316,7 +316,7 @@ Precedence:
       RPAREN: Rule 6
 
   State 13:
-    53/l3: modifier → "+" • 
+    53/l3: modifier → "+" •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 7
@@ -335,7 +335,7 @@ Precedence:
       RPAREN: Rule 7
 
   State 14:
-    54/l3: modifier → "?" • 
+    54/l3: modifier → "?" •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 8
@@ -382,7 +382,7 @@ Precedence:
       IDENTIFIER: State 8
 
   State 16:
-    64/l4: binop → "|" • 
+    64/l4: binop → "|" •
       {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
     reductions:
       STAR: Rule 9
@@ -399,7 +399,7 @@ Precedence:
       IDENTIFIER: Rule 9
 
   State 17:
-    65/l4: binop → "&" • 
+    65/l4: binop → "&" •
       {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
     reductions:
       STAR: Rule 10
@@ -416,7 +416,7 @@ Precedence:
       IDENTIFIER: Rule 10
 
   State 18:
-    66/l4: binop → "--" • 
+    66/l4: binop → "--" •
       {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
     reductions:
       STAR: Rule 11
@@ -433,7 +433,7 @@ Precedence:
       IDENTIFIER: Rule 11
 
   State 19:
-    67/l4: binop → "-" • 
+    67/l4: binop → "-" •
       {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
     reductions:
       STAR: Rule 12
@@ -456,7 +456,7 @@ Precedence:
       RPAREN: State 22
 
   State 21:
-    69/n1: group → group binop group • 
+    69/n1: group → group binop group •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     70/n1: group → group • modifier
       {}
@@ -496,7 +496,7 @@ Precedence:
       RPAREN: Rule 4
 
   State 22:
-    79/n2: value → "(" expression ")" • 
+    79/n2: value → "(" expression ")" •
       {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
     reductions:
       $: Rule 13
