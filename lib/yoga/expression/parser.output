@@ -1,0 +1,516 @@
+Productions:
+  expression → group { |_| [_]       }
+  expression → group expression { |a, b| b.unshift(a) }
+  group → group modifier { |a, b| [b, a] }
+  group → group binop group { |a, b, c| compile_binop(b, a, c) }
+  group → value 
+  modifier → "*" { |_| _[0] }
+  modifier → "+" { |_| _[0] }
+  modifier → "?" { |_| _[0] }
+  binop → "|" { |_| _[0] }
+  binop → "&" { |_| _[0] }
+  binop → "--" { |_| _[0] }
+  binop → "-" { |_| _[0] }
+  value → "(" expression ")" { |_, a, _| a }
+  value → STRING { |_| compile_string(_)  }
+  value → CONTAIN { |_| compile_contain(_) }
+  value → NUMBER { |_| compile_number(_)  }
+  value → IDENTIFIER 
+  $start → expression $ 
+
+Precedence:
+  --- highest
+  left     4:
+    {UNION, INTERSECT, SDIFFERENCE, DIFFERENCE}
+  left     3:
+    {STAR, PLUS, OPTIONAL}
+  nonassoc 2:
+    {LPAREN, RPAREN}
+  nonassoc 1:
+    {_}
+  nonassoc 0:
+    {$}
+  --- lowest
+
+  State 0:
+    0/n0: $start →  • expression $
+      {}
+    1/n1: expression →  • group
+      {}
+    2/n1: expression →  • group expression
+      {}
+    3/n1: group →  • group modifier
+      {}
+    4/n1: group →  • group binop group
+      {}
+    5/n1: group →  • value
+      {}
+    6/n2: value →  • "(" expression ")"
+      {}
+    7/n1: value →  • STRING
+      {}
+    8/n1: value →  • CONTAIN
+      {}
+    9/n1: value →  • NUMBER
+      {}
+    10/n1: value →  • IDENTIFIER
+      {}
+    transitions:
+      expression: State 1
+      group: State 2
+      value: State 3
+      LPAREN: State 4
+      STRING: State 5
+      CONTAIN: State 6
+      NUMBER: State 7
+      IDENTIFIER: State 8
+
+  State 1:
+    11/n0: $start → expression • $
+      {}
+    transitions:
+      $: State 9
+
+  State 2:
+    12/n1: expression → group • 
+      {$, ")"}
+    13/n1: expression → group • expression
+      {}
+    14/n1: expression →  • group
+      {}
+    15/n1: expression →  • group expression
+      {}
+    16/n1: group →  • group modifier
+      {}
+    17/n1: group →  • group binop group
+      {}
+    18/n1: group →  • value
+      {}
+    19/n2: value →  • "(" expression ")"
+      {}
+    20/n1: value →  • STRING
+      {}
+    21/n1: value →  • CONTAIN
+      {}
+    22/n1: value →  • NUMBER
+      {}
+    23/n1: value →  • IDENTIFIER
+      {}
+    24/n1: group → group • modifier
+      {}
+    25/l3: modifier →  • "*"
+      {}
+    26/l3: modifier →  • "+"
+      {}
+    27/l3: modifier →  • "?"
+      {}
+    28/n1: group → group • binop group
+      {}
+    29/l4: binop →  • "|"
+      {}
+    30/l4: binop →  • "&"
+      {}
+    31/l4: binop →  • "--"
+      {}
+    32/l4: binop →  • "-"
+      {}
+    transitions:
+      expression: State 10
+      group: State 2
+      value: State 3
+      LPAREN: State 4
+      STRING: State 5
+      CONTAIN: State 6
+      NUMBER: State 7
+      IDENTIFIER: State 8
+      modifier: State 11
+      STAR: State 12
+      PLUS: State 13
+      OPTIONAL: State 14
+      binop: State 15
+      UNION: State 16
+      INTERSECT: State 17
+      SDIFFERENCE: State 18
+      DIFFERENCE: State 19
+    reductions:
+      $: Rule 1
+      RPAREN: Rule 1
+
+  State 3:
+    33/n1: group → value • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 5
+      STAR: Rule 5
+      PLUS: Rule 5
+      OPTIONAL: Rule 5
+      UNION: Rule 5
+      INTERSECT: Rule 5
+      SDIFFERENCE: Rule 5
+      DIFFERENCE: Rule 5
+      LPAREN: Rule 5
+      STRING: Rule 5
+      CONTAIN: Rule 5
+      NUMBER: Rule 5
+      IDENTIFIER: Rule 5
+      RPAREN: Rule 5
+
+  State 4:
+    34/n2: value → "(" • expression ")"
+      {}
+    35/n1: expression →  • group
+      {}
+    36/n1: expression →  • group expression
+      {}
+    37/n1: group →  • group modifier
+      {}
+    38/n1: group →  • group binop group
+      {}
+    39/n1: group →  • value
+      {}
+    40/n2: value →  • "(" expression ")"
+      {}
+    41/n1: value →  • STRING
+      {}
+    42/n1: value →  • CONTAIN
+      {}
+    43/n1: value →  • NUMBER
+      {}
+    44/n1: value →  • IDENTIFIER
+      {}
+    transitions:
+      expression: State 20
+      group: State 2
+      value: State 3
+      LPAREN: State 4
+      STRING: State 5
+      CONTAIN: State 6
+      NUMBER: State 7
+      IDENTIFIER: State 8
+
+  State 5:
+    45/n1: value → STRING • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 14
+      STAR: Rule 14
+      PLUS: Rule 14
+      OPTIONAL: Rule 14
+      UNION: Rule 14
+      INTERSECT: Rule 14
+      SDIFFERENCE: Rule 14
+      DIFFERENCE: Rule 14
+      LPAREN: Rule 14
+      STRING: Rule 14
+      CONTAIN: Rule 14
+      NUMBER: Rule 14
+      IDENTIFIER: Rule 14
+      RPAREN: Rule 14
+
+  State 6:
+    46/n1: value → CONTAIN • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 15
+      STAR: Rule 15
+      PLUS: Rule 15
+      OPTIONAL: Rule 15
+      UNION: Rule 15
+      INTERSECT: Rule 15
+      SDIFFERENCE: Rule 15
+      DIFFERENCE: Rule 15
+      LPAREN: Rule 15
+      STRING: Rule 15
+      CONTAIN: Rule 15
+      NUMBER: Rule 15
+      IDENTIFIER: Rule 15
+      RPAREN: Rule 15
+
+  State 7:
+    47/n1: value → NUMBER • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 16
+      STAR: Rule 16
+      PLUS: Rule 16
+      OPTIONAL: Rule 16
+      UNION: Rule 16
+      INTERSECT: Rule 16
+      SDIFFERENCE: Rule 16
+      DIFFERENCE: Rule 16
+      LPAREN: Rule 16
+      STRING: Rule 16
+      CONTAIN: Rule 16
+      NUMBER: Rule 16
+      IDENTIFIER: Rule 16
+      RPAREN: Rule 16
+
+  State 8:
+    48/n1: value → IDENTIFIER • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 17
+      STAR: Rule 17
+      PLUS: Rule 17
+      OPTIONAL: Rule 17
+      UNION: Rule 17
+      INTERSECT: Rule 17
+      SDIFFERENCE: Rule 17
+      DIFFERENCE: Rule 17
+      LPAREN: Rule 17
+      STRING: Rule 17
+      CONTAIN: Rule 17
+      NUMBER: Rule 17
+      IDENTIFIER: Rule 17
+      RPAREN: Rule 17
+
+  State 9:
+    49/n0: $start → expression $ • 
+      {}
+    accepting:
+      $: Rule 0
+
+  State 10:
+    50/n1: expression → group expression • 
+      {$, ")"}
+    reductions:
+      $: Rule 2
+      RPAREN: Rule 2
+
+  State 11:
+    51/n1: group → group modifier • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 3
+      STAR: Rule 3
+      PLUS: Rule 3
+      OPTIONAL: Rule 3
+      UNION: Rule 3
+      INTERSECT: Rule 3
+      SDIFFERENCE: Rule 3
+      DIFFERENCE: Rule 3
+      LPAREN: Rule 3
+      STRING: Rule 3
+      CONTAIN: Rule 3
+      NUMBER: Rule 3
+      IDENTIFIER: Rule 3
+      RPAREN: Rule 3
+
+  State 12:
+    52/l3: modifier → "*" • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 6
+      STAR: Rule 6
+      PLUS: Rule 6
+      OPTIONAL: Rule 6
+      UNION: Rule 6
+      INTERSECT: Rule 6
+      SDIFFERENCE: Rule 6
+      DIFFERENCE: Rule 6
+      LPAREN: Rule 6
+      STRING: Rule 6
+      CONTAIN: Rule 6
+      NUMBER: Rule 6
+      IDENTIFIER: Rule 6
+      RPAREN: Rule 6
+
+  State 13:
+    53/l3: modifier → "+" • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 7
+      STAR: Rule 7
+      PLUS: Rule 7
+      OPTIONAL: Rule 7
+      UNION: Rule 7
+      INTERSECT: Rule 7
+      SDIFFERENCE: Rule 7
+      DIFFERENCE: Rule 7
+      LPAREN: Rule 7
+      STRING: Rule 7
+      CONTAIN: Rule 7
+      NUMBER: Rule 7
+      IDENTIFIER: Rule 7
+      RPAREN: Rule 7
+
+  State 14:
+    54/l3: modifier → "?" • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 8
+      STAR: Rule 8
+      PLUS: Rule 8
+      OPTIONAL: Rule 8
+      UNION: Rule 8
+      INTERSECT: Rule 8
+      SDIFFERENCE: Rule 8
+      DIFFERENCE: Rule 8
+      LPAREN: Rule 8
+      STRING: Rule 8
+      CONTAIN: Rule 8
+      NUMBER: Rule 8
+      IDENTIFIER: Rule 8
+      RPAREN: Rule 8
+
+  State 15:
+    55/n1: group → group binop • group
+      {}
+    56/n1: group →  • group modifier
+      {}
+    57/n1: group →  • group binop group
+      {}
+    58/n1: group →  • value
+      {}
+    59/n2: value →  • "(" expression ")"
+      {}
+    60/n1: value →  • STRING
+      {}
+    61/n1: value →  • CONTAIN
+      {}
+    62/n1: value →  • NUMBER
+      {}
+    63/n1: value →  • IDENTIFIER
+      {}
+    transitions:
+      group: State 21
+      value: State 3
+      LPAREN: State 4
+      STRING: State 5
+      CONTAIN: State 6
+      NUMBER: State 7
+      IDENTIFIER: State 8
+
+  State 16:
+    64/l4: binop → "|" • 
+      {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
+    reductions:
+      STAR: Rule 9
+      PLUS: Rule 9
+      OPTIONAL: Rule 9
+      UNION: Rule 9
+      INTERSECT: Rule 9
+      SDIFFERENCE: Rule 9
+      DIFFERENCE: Rule 9
+      LPAREN: Rule 9
+      STRING: Rule 9
+      CONTAIN: Rule 9
+      NUMBER: Rule 9
+      IDENTIFIER: Rule 9
+
+  State 17:
+    65/l4: binop → "&" • 
+      {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
+    reductions:
+      STAR: Rule 10
+      PLUS: Rule 10
+      OPTIONAL: Rule 10
+      UNION: Rule 10
+      INTERSECT: Rule 10
+      SDIFFERENCE: Rule 10
+      DIFFERENCE: Rule 10
+      LPAREN: Rule 10
+      STRING: Rule 10
+      CONTAIN: Rule 10
+      NUMBER: Rule 10
+      IDENTIFIER: Rule 10
+
+  State 18:
+    66/l4: binop → "--" • 
+      {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
+    reductions:
+      STAR: Rule 11
+      PLUS: Rule 11
+      OPTIONAL: Rule 11
+      UNION: Rule 11
+      INTERSECT: Rule 11
+      SDIFFERENCE: Rule 11
+      DIFFERENCE: Rule 11
+      LPAREN: Rule 11
+      STRING: Rule 11
+      CONTAIN: Rule 11
+      NUMBER: Rule 11
+      IDENTIFIER: Rule 11
+
+  State 19:
+    67/l4: binop → "-" • 
+      {"*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER}
+    reductions:
+      STAR: Rule 12
+      PLUS: Rule 12
+      OPTIONAL: Rule 12
+      UNION: Rule 12
+      INTERSECT: Rule 12
+      SDIFFERENCE: Rule 12
+      DIFFERENCE: Rule 12
+      LPAREN: Rule 12
+      STRING: Rule 12
+      CONTAIN: Rule 12
+      NUMBER: Rule 12
+      IDENTIFIER: Rule 12
+
+  State 20:
+    68/n2: value → "(" expression • ")"
+      {}
+    transitions:
+      RPAREN: State 22
+
+  State 21:
+    69/n1: group → group binop group • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    70/n1: group → group • modifier
+      {}
+    71/l3: modifier →  • "*"
+      {}
+    72/l3: modifier →  • "+"
+      {}
+    73/l3: modifier →  • "?"
+      {}
+    74/n1: group → group • binop group
+      {}
+    75/l4: binop →  • "|"
+      {}
+    76/l4: binop →  • "&"
+      {}
+    77/l4: binop →  • "--"
+      {}
+    78/l4: binop →  • "-"
+      {}
+    transitions:
+      modifier: State 11
+      STAR: State 12
+      PLUS: State 13
+      OPTIONAL: State 14
+      binop: State 15
+      UNION: State 16
+      INTERSECT: State 17
+      SDIFFERENCE: State 18
+      DIFFERENCE: State 19
+    reductions:
+      $: Rule 4
+      LPAREN: Rule 4
+      STRING: Rule 4
+      CONTAIN: Rule 4
+      NUMBER: Rule 4
+      IDENTIFIER: Rule 4
+      RPAREN: Rule 4
+
+  State 22:
+    79/n2: value → "(" expression ")" • 
+      {$, "*", "+", "?", "|", "&", "--", "-", "(", STRING, CONTAIN, NUMBER, IDENTIFIER, ")"}
+    reductions:
+      $: Rule 13
+      STAR: Rule 13
+      PLUS: Rule 13
+      OPTIONAL: Rule 13
+      UNION: Rule 13
+      INTERSECT: Rule 13
+      SDIFFERENCE: Rule 13
+      DIFFERENCE: Rule 13
+      LPAREN: Rule 13
+      STRING: Rule 13
+      CONTAIN: Rule 13
+      NUMBER: Rule 13
+      IDENTIFIER: Rule 13
+      RPAREN: Rule 13
+
