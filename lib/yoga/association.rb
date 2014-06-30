@@ -1,5 +1,6 @@
 require "forwardable"
 require "set"
+require "yoga/association/associationable"
 
 module Yoga
   class Association < Set

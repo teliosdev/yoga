@@ -1,7 +1,7 @@
 digraph machine {
 
   rankdir="LR";
-  node [fontsize=10.0 fontname="courier"];
+  node [fontsize=10.0 shape="circle"];
   edge [fontsize=10.0 fontname="courier" arrowhead="vee"];
 
   starting [shape=point];
@@ -10,15 +10,15 @@ digraph machine {
 <% end -%>
 
 <% starting.each do |part| -%>
-  starting -> p<%= part.id %> [label="start" fontcolor=cornflowerblue];
+  starting -> p<%= part.id %> [label="start" fontcolor=cornflowerblue fontname="Times-Roman"];
 <% end -%>
 
-<% parts.each do |part| -%>
-  p<%= part.id %> [label="<%= part.id[0..9] %>" <% if part.accepting? %> shape="box" <% end %>];
+<% parts.each_with_index do |part, i| -%>
+  p<%= part.id %> [label="<%= i %>" <% if part.accepting? %> shape="doublecircle" <% end %>];
 <%   part.transitions.each do |transition| %>
     p<%= part.id %> -> p<%= transition.to.id %> [label="<%= transition.stringify %>"]
 <%   end -%>
 <% end -%>
 
-  alphabet [label="alphabet: \n<%= stringify_alphabet %>" shape="box" fontsize=8.0];
+  #alphabet [label="alphabet: \n<%= stringify_alphabet %>" shape="box" fontsize=8.0];
 }

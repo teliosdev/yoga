@@ -2,11 +2,17 @@ module Yoga
   class Machine
     module Minimizable
 
+      def minimal?
+        starting.size == 1 && accepting.size == 1
+      end
+
       def minimize!
-        minimize_starting
-        minimize_epsilon_transitions
-        minimize_parts
-        minimize_transitions
+        @minimizing = true
+        minimize_epsilon_transitions!
+        minimize_starting!
+        minimize_parts!
+        minimize_transitions! true
+        @minimizing = false
 
         self
       end
@@ -17,11 +23,13 @@ module Yoga
 
       # Make sure that there is only one starting state and one
       # accepting state.
-      def minimize_starting
+      def minimize_starting!
         raise NoPartError,
           "Machine contains no starting parts" unless starting.any?
         raise NoPartError,
           "Machine contains no accepting parts" unless accepting.any?
+
+        return self if deterministic?
 
         if starting.size > 1
           new_starting = parts.create
@@ -48,39 +56,36 @@ module Yoga
         self
       end
 
-      # Remove states that have one epsilon transition.
-      def minimize_epsilon_transitions
-        parts.reject! do |part|
-          if part.transitions.size == 1 &&
-              part.transitions.first.type?(:epsilon)
-
-            to_state = part.transitions.first.to
-            to_state.accepting = to_state.accepting? ||
-              part.accepting?
-            to_state.starting  = to_state.starting?  ||
-              part.starting?
-
-            containing = parts.select { |p| p.transitions.
-              any? { |_| _.to == part } }
-
-            containing.each do |contain|
-              contain.transitions.each do |transition|
-                if transition.to == part
-                  transition.to = to_state
-                end
+      # Remove excess epsilon transitions.
+      def minimize_epsilon_transitions!
+        parts.each do |part|
+          fixed_point(part.transitions) do
+            part.transitions.select(&:epsilon?).each do |transition|
+              to_state = transition.to
+              if to_state.transitions.all?(&:epsilon?)
+                part.transitions.merge(to_state.transitions)
+                part.transitions.delete(transition)
+                part.accepting = part.accepting? || to_state.accepting?
+                part.starting = part.starting? || to_state.starting?
+              elsif to_state == part
+                part.transitions.delete(transition)
               end
             end
 
-            true
-          else
-            false
+            if part.transitions.size == 1 && part.transitions.first.epsilon?
+              to_merge = part.transitions.first
+              part.transitions.merge(to_merge.to.transitions)
+              part.transitions.delete(to_merge)
+            end
           end
         end
+
+        self
       end
 
       # Removes parts that are not on a path from a starting state
       # to an accepting state.
-      def minimize_parts
+      def minimize_parts!
         acceptable = Set.new
 
         starting.each do |start|
@@ -89,11 +94,13 @@ module Yoga
           acceptable.merge(path) if path
         end
 
-        @parts = acceptable.select { |_| leads_to_accepting?(_) }
+        self.parts = acceptable.select { |_| leads_to_accepting?(_) }
+
+        self
       end
 
       # Combines transitions that lead to the same state.
-      def minimize_transitions(allow_exclusion = false)
+      def minimize_transitions!(allow_exclusion = false)
         parts.each do |part|
           transitionables = part.transitions.group_by { |t| t.to }
           transitions = Set.new
@@ -106,7 +113,7 @@ module Yoga
               when :inclusion
                 with.on.merge(transition.on)
               when :exclusion
-                with.on -= transition.on
+                with.on.merge(alphabet - transition.on)
               when :epsilon
                 with.type = :epsilon
               end
@@ -124,13 +131,22 @@ module Yoga
 
           part.transitions = transitions
         end
+
+        self
       end
+
+      def minimize_hopcroft
+
+      end
+
+      private
 
       def leads_to_accepting?(part)
         touches = Set.new([part])
 
         fixed_point(touches) do
-          touches.merge(touches.map(&:transitions).flatten.map(&:to))
+          touches.merge(touches.map(&:transitions).
+                        map { |_| _.map(&:to) }.flatten)
         end
 
         if touches.any?(&:accepting?)

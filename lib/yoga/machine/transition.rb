@@ -18,19 +18,38 @@ module Yoga
         else
           super
         end
+
+        self.type ||= :inclusion
+        self.on   ||= Set.new
+      end
+
+      def match?(character)
+        case type
+        when :inclusion
+          on.include?(character)
+        when :exclusion
+          !on.include?(character)
+        when :epsilon
+          false
+        end
       end
 
       def stringify
         out = ""
 
-        if type?(:exclusion)
+        case type
+        when :exclusion
           out << "Σ"
           out << " - " if any?
-        elsif type?(:epsilon)
+        when :epsilon
           out << "ε"
         end
 
-        out << Dotable.stringify_alphabet(self)
+        if epsilon? || none?
+          out
+        else
+          out << Dotable.stringify_alphabet(self)
+        end
       end
 
       def from_hash(hash)
@@ -41,6 +60,18 @@ module Yoga
 
       def type?(*checking)
         checking.to_set.include?(type)
+      end
+
+      def epsilon?
+        type == :epsilon
+      end
+
+      def inclusion?
+        type == :inclusion
+      end
+
+      def exclusion?
+        type == :exclusion
       end
     end
   end

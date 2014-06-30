@@ -4,10 +4,16 @@ module Yoga
   class Machine
     class Part
 
+      include Associationable
+
       attr_writer :accepting
       attr_writer :starting
 
+      attr_accessor :parts
       attr_accessor :id
+
+      def_association :transitions, Transition
+      def_association :parts, Part
 
       def initialize
         @id          = SecureRandom.hex
@@ -19,21 +25,6 @@ module Yoga
         self.transitions = transitions.map(&:clone)
       end
 
-      def rehash_transitions(machine)
-        transitions.each do |transition|
-          transition.to = machine.parts.
-            find { |_| _ == transition.to }
-        end
-      end
-
-      def transitions
-        @_transitions ||= Association.new(self, Transition)
-      end
-
-      def transitions=(new_transitions)
-        @_transitions = Association.new(self, Transition, new_transitions)
-      end
-
       def accepting?
         @accepting
       end
@@ -42,8 +33,27 @@ module Yoga
         @starting
       end
 
+      def stuck?
+        false
+      end
+
+      def transitions_for(character)
+        transitions.select { |_| _.match?(character) }
+      end
+
+      def contains_parts_from?(machine)
+        parts.any? { |_| machine.parts.include?(_) }
+      end
+
+      def rehash_transitions(machine)
+        transitions.each do |transition|
+          transition.to = machine.parts.
+            find { |_| _ == transition.to }
+        end
+      end
+
       def ==(other)
-        self.class === other && id == other.id
+        self.class == other.class && id == other.id
       end
 
       alias_method :eql?, :==
@@ -51,6 +61,14 @@ module Yoga
       def hash
         id.hash
       end
+
+      def to_s
+        "#<#{self.class} #transitions=#{transitions.size} #parts=#{parts.size} id=#{id[0..9]} starting=#{starting?} accepting=#{accepting?}>"
+      end
+
+      alias_method :inspect, :to_s
     end
+
+    class StuckPart < Part; def stuck?; true; end; end
   end
 end

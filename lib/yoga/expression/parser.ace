@@ -13,6 +13,7 @@
 %terminal RPAREN ")"
 %terminal LBRACK "["
 %terminal RBRACK "]"
+%terminal INVERT "^"
 %terminal ESCAPED
 %terminal CHARACTER
 %terminal STRING
@@ -48,7 +49,7 @@ value: LPAREN expression RPAREN { |_, a, _| compile_paren(a)      }
      | NUMBER                   { |_|       compile_number(_)     }
      | identifier               { |_|       compile_identifier(_) }
 
-contain: LBRACK contain.parts RBRACK { |_, a, _| a }
+contain: LBRACK contain.body RBRACK { |_, a, _| a }
 
 identifier: CHARACTER chars     { |a, b| b.unshift(a)             }
 
@@ -58,6 +59,9 @@ chars: char                     { |_|    [_]                      }
 char: CHARACTER
     | NUMBER
     | DIFFERENCE
+
+contain.body: INVERT contain.parts          { |a, b| b.unshift(a) }
+            | contain.parts
 
 contain.parts: contain.part                 { |_|    [_]          }
              | contain.part contain.parts   { |a, b| b.unshift(a) }

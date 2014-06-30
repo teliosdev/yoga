@@ -18,7 +18,13 @@ describe Expression::Lexer do
     let(:body) { "[hello] | 'world'" }
     it "properly scans" do
       expect(scan).to eq [
-        [:CONTAIN, "hello"],
+        [:LBRACK],
+        [:CHARACTER, "h"],
+        [:CHARACTER, "e"],
+        [:CHARACTER, "l"],
+        [:CHARACTER, "l"],
+        [:CHARACTER, "o"],
+        [:RBRACK],
         [:UNION],
         [:STRING, "world"]
       ]
@@ -37,9 +43,15 @@ describe Expression::Lexer do
           [:RPAREN],
           [:UNION],
           [:LPAREN],
-          [:CONTAIN, "a"],
+          [:LBRACK],
+          [:CHARACTER, "a"],
+          [:RBRACK],
           [:STAR],
-          [:IDENTIFIER, "world"],
+          [:CHARACTER, "w"],
+          [:CHARACTER, "o"],
+          [:CHARACTER, "r"],
+          [:CHARACTER, "l"],
+          [:CHARACTER, "d"],
           [:REPETITION, "1", true, "2"],
           [:SDIFFERENCE],
           [:STRING, "a"],
@@ -51,6 +63,13 @@ describe Expression::Lexer do
           [:OPTIONAL]
         ]
       end
+    end
+  end
+
+  context "#string_escapes" do
+    let(:body) { nil }
+    it "properly handles escapes" do
+      expect(subject.string_escapes("\\n\\a\\x42")).to eq "\n\a\x42"
     end
   end
 

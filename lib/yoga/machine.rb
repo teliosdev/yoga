@@ -2,6 +2,8 @@ require "yoga/machine/transition"
 require "yoga/machine/part"
 require "yoga/machine/minimizable"
 require "yoga/machine/dotable"
+require "yoga/machine/determinitizable"
+require "yoga/machine/runable"
 require "yoga/machine/no_part_error"
 
 module Yoga
@@ -9,16 +11,13 @@ module Yoga
 
     include Minimizable
     include Dotable
+    include Determinitizable
+    include Runable
+    include Associationable
+
+    def_association :parts, Part
 
     def initialize
-    end
-
-    def parts
-      @_parts ||= Association.new(self, Part)
-    end
-
-    def parts=(new_parts)
-      @_parts = Association.new(self, Part, new_parts)
     end
 
     def initialize_copy(old)
@@ -34,9 +33,28 @@ module Yoga
       parts.select(&:accepting?)
     end
 
+    def merge(other)
+      parts.merge(other.clone.parts)
+    end
+
+    def concat(other)
+      other = other.clone
+      accepting.each do |accept|
+        other.starting.each do |start|
+          accept.transitions.create(type: :epsilon, to: start)
+          start.starting = false
+        end
+
+        accept.accepting = false
+      end
+
+      parts.merge(other.parts)
+    end
+
     def alphabet
-      parts.map(&:transitions).map(&:to_a).
-        map { |_| _.map { |__| __.on.to_a } }.flatten.to_set
+      #parts.map(&:transitions).map(&:to_a).
+      #  map { |_| _.map { |__| __.on.to_a } }.flatten.to_set
+      Set.new((0..255).map(&:chr))
     end
 
   end

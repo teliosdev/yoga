@@ -18,6 +18,8 @@ describe Machine do
     subject.parts << second_part
   end
 
+  its(:alphabet) { should eq Set.new(["a"]) }
+
   context "#clone" do
     it "clones parts" do
       cloned = subject.clone
@@ -37,6 +39,4 @@ describe Machine do
       expect(subject.stringify_alphabet(alphabet)).to eq "'a'..'d', 'm'..'r', 'z'"
     end
   end
-
-  its(:alphabet) { should eq Set.new(["a"]) }
 end

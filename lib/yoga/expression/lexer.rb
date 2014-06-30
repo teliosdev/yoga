@@ -45,12 +45,7 @@ module Yoga
 
       def scan_double_string
         if @scanner.scan(/"((?:\\"|[^"])+)"/)
-          tokens << [:STRING,
-            @scanner[1].gsub(/\\[\\0abtnvfr]/, "\\0" => "\0",
-              "\\a" => "\a", "\\b" => "\b", "\\t" => "\t",
-              "\\n" => "\n", "\\v" => "\v", "\\f" => "\f",
-              "\\r" => "\r", "\\\\" => "\\")
-          ]
+          tokens << [:STRING, string_escapes(@scanner[1])]
         end
       end
 
@@ -81,6 +76,8 @@ module Yoga
           tokens << [:ESCAPED]
         elsif @scanner.scan(/\\'/)
           tokens << [:ESCAPED]
+        elsif @scanner.scan(/\^/)
+          tokens << [:INVERT]
         else
           scan_repetition
         end
@@ -96,8 +93,8 @@ module Yoga
       end
 
       def scan_character
-        if @scanner.scan(/([A-Za-z_])/)
-          tokens << [:CHARACTER, @scanner[1]]
+        if @scanner.scan(/(\\?[A-Za-z_])/)
+          tokens << [:CHARACTER, string_escapes(@scanner[1])]
         end
       end
 
@@ -113,6 +110,16 @@ module Yoga
         snip  = @scanner.string[start..stop].strip
         char  = @scanner.string[@scanner.pos]
         raise SyntaxError, "invalid syntax near `#{snip.inspect}' (#{char.inspect})"
+      end
+
+      def string_escapes(string)
+        # "\\\\" => "\\"
+        string.gsub(/\\[\\0abtnvfr]/, "\\0" => "\0",
+          "\\a" => "\a", "\\b" => "\b", "\\t" => "\t",
+          "\\n" => "\n", "\\v" => "\v", "\\f" => "\f",
+          "\\r" => "\r").gsub(/\\x([0-9a-f]{2})/) do |num|
+          num[2..-1].to_i(16).chr
+        end.gsub("\\\\", "\\")
       end
 
     end

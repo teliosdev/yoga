@@ -25,7 +25,7 @@ module Yoga
         end
 
         if alphabet.size == 1
-          groups = [alphabet]
+          groups = [alphabet.to_a]
         else
           groups     = [[]]
           difference = proc { |a, b| b.ord - a.ord }
