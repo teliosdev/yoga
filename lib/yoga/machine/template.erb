@@ -1,0 +1,24 @@
+digraph machine {
+
+  rankdir="LR";
+  node [fontsize=10.0 fontname="courier"];
+  edge [fontsize=10.0 fontname="courier" arrowhead="vee"];
+
+  starting [shape=point];
+<% if false && parts.any?(&:stuck?) -%>
+  pstuck [fontcolor=red];
+<% end -%>
+
+<% starting.each do |part| -%>
+  starting -> p<%= part.id %> [label="start" fontcolor=cornflowerblue];
+<% end -%>
+
+<% parts.each do |part| -%>
+  p<%= part.id %> [label="<%= part.id[0..9] %>" <% if part.accepting? %> shape="box" <% end %>];
+<%   part.transitions.each do |transition| %>
+    p<%= part.id %> -> p<%= transition.to.id %> [label="<%= transition.stringify %>"]
+<%   end -%>
+<% end -%>
+
+  alphabet [label="alphabet: \n<%= stringify_alphabet %>" shape="box" fontsize=8.0];
+}
