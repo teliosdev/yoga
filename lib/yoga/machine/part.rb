@@ -4,6 +4,7 @@ module Yoga
   class Machine
     class Part
 
+      include Comparable
       include Associationable
 
       attr_writer :accepting
@@ -41,6 +42,12 @@ module Yoga
         transitions.select { |_| _.match?(character) }
       end
 
+      def transition(character)
+        transition = transitions_for(character).first
+
+        transition.to if transition
+      end
+
       def contains_parts_from?(machine)
         parts.any? { |_| machine.parts.include?(_) }
       end
@@ -52,8 +59,12 @@ module Yoga
         end
       end
 
-      def ==(other)
-        self.class == other.class && id == other.id
+      def <=>(other)
+        if other.is_a? Part
+          id <=> other.id
+        else
+          id <=> other
+        end
       end
 
       alias_method :eql?, :==
@@ -64,6 +75,7 @@ module Yoga
 
       def to_s
         "#<#{self.class} #transitions=#{transitions.size} #parts=#{parts.size} id=#{id[0..9]} starting=#{starting?} accepting=#{accepting?}>"
+        id[0..9]
       end
 
       alias_method :inspect, :to_s

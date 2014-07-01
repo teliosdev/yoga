@@ -135,8 +135,56 @@ module Yoga
         self
       end
 
-      def minimize_hopcroft
+      def minimize_nondistinct!
+        distinct = {}
 
+        parts.to_a.combination(2) do |p, q|
+          check = [p, q].sort
+          if (p.accepting? && !q.accepting?) ||
+             (!p.accepting? && q.accepting?)
+            distinct[check] = :epsilon
+          else
+            distinct[check] = nil
+          end
+        end
+
+        changes = 1
+
+        until changes.zero?
+          changes = 0
+          parts.to_a.combination(2) do |p, q|
+            check = [p, q].sort
+            alphabet.each do |c|
+              transitionable = [
+                p.transition(c),
+                q.transition(c)
+              ]
+              next unless transitionable.all?
+              transitionable.sort!
+              if distinct[check] == nil && distinct[transitionable] != nil
+                puts "change #{distinct[transitionable]} to #{c}"
+                changes += 1
+                distinct[check] = c
+              end
+            end
+          end
+        end
+
+        distinct.each do |(left, right), v|
+          next if v
+
+          puts "merging #{left} and #{right}"
+
+          left.transitions.merge(right.transitions)
+
+          parts.each do |part|
+            part.transitions.each do |transition|
+              transition.to = left if transition.to == right
+            end
+          end
+        end
+
+        self
       end
 
       private

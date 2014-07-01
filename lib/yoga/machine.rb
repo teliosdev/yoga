@@ -26,11 +26,11 @@ module Yoga
     end
 
     def starting
-      parts.select(&:starting?)
+      parts.select(&:starting?).to_set
     end
 
     def accepting
-      parts.select(&:accepting?)
+      parts.select(&:accepting?).to_set
     end
 
     def merge(other)
