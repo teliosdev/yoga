@@ -36,7 +36,7 @@
 
 %%
 
-main: expression             { |_| compile_paren(a) }
+main: expression             { |_| compile_paren(_) }
 
 expression: group            { |_|    [_]           }
           | group expression { |a, b| b.unshift(a)  }

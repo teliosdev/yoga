@@ -3,7 +3,8 @@
 module Yoga
   class Expression
     module Parser
-      # This file assumes that the output of the generator will be placed
+      
+# This file assumes that the output of the generator will be placed
 # within a module or a class.  However, the module/class requires a
 # `type` method, which takes a terminal and gives its type, as a
 # symbol.  These types should line up with the terminals that were
@@ -645,7 +646,7 @@ ACTION_TABLE = [{:main=>[:state, 1],
 #
 # @return [Array<Array<(Symbol, Numeric, Proc)>>]
 PRODUCTIONS  = [[:$start, 2, proc { |_| _ }],
-[:main, 1, proc { |_| compile_paren(a) }],
+[:main, 1, proc { |_| compile_paren(_) }],
 [:expression, 1, proc { |_|    [_]           }],
 [:expression, 2, proc { |a, b| b.unshift(a)  }],
 [:group, 2, proc { |a, b|    compile_modifier(b, a)     }],

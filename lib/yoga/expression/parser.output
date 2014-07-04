@@ -1,6 +1,6 @@
 Productions:
    0 $start: main $                                           
-   1 main: expression                                         { |_| compile_paren(a) }
+   1 main: expression                                         { |_| compile_paren(_) }
    2 expression: group                                        { |_|    [_]           }
    3 expression: group expression                             { |a, b| b.unshift(a)  }
    4 group: group modifier                                    { |a, b|    compile_modifier(b, a)     }

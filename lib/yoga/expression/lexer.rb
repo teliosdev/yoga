@@ -50,7 +50,7 @@ module Yoga
       end
 
       def scan_operator
-        scan \
+        scan_for \
           /\|/  => :UNION,
           /\$/  => :INTERSECT,
           /--/  => :SDIFFERENCE,
@@ -76,7 +76,7 @@ module Yoga
       end
 
       def scan_character
-        scan /(\\?[A-Za-z_])/ => proc {
+        scan_for /(\\?[A-Za-z_])/ => proc {
           [:CHARACTER, string_escapes(@scanner[1])]
         }
       end
@@ -89,11 +89,11 @@ module Yoga
 
       private
 
-      def scan(hash)
+      def scan_for(hash)
         matched = false
         hash.each do |key, value|
           if @scanner.scan(key)
-            v = if value.is_a? Block
+            v = if value.is_a? Proc
               instance_exec(&value)
             else
               value
