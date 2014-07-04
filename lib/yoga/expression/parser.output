@@ -1,51 +1,52 @@
 Productions:
-   0 $start: main $                                           
-   1 main: expression                                         { |_| compile_paren(_) }
-   2 expression: group                                        { |_|    [_]           }
-   3 expression: group expression                             { |a, b| b.unshift(a)  }
-   4 group: group modifier                                    { |a, b|    compile_modifier(b, a)     }
-   5 group: group binop group                                 { |a, b, c| compile_binop(b, a, c)     }
-   6 group: group transitional                                { |a, b|    compile_transitional(b, a) }
-   7 group: value                                             
-   8 modifier: "*"                                            { |_| _[0] }
-   9 modifier: "+"                                            { |_| _[0] }
-  10 modifier: "?"                                            { |_| _[0] }
-  11 modifier: "{" NUMBER "}"                                 
-  12 modifier: "{" "," NUMBER "}"                             
-  13 modifier: "{" NUMBER "," "}"                             
-  14 modifier: "{" NUMBER "," NUMBER "}"                      
-  15 binop: "|"                                               { |_| _[0] }
-  16 binop: "&"                                               { |_| _[0] }
-  17 binop: "--"                                              { |_| _[0] }
-  18 binop: "-"                                               { |_| _[0] }
-  19 transitional: ":" "<" transitional.type chars NUMBER ">" { |_, _, a, b, c,_| [a, b, c]   }
-  20 transitional: ":" "<" transitional.type NUMBER ">"       { |_, _, a, b, _|   [a, nil, b] }
-  21 transitional.type: ">"                                   
-  22 transitional.type: "<"                                   
-  23 transitional.type: "%"                                   
-  24 transitional.type: "$"                                   
-  25 value: "(" expression ")"                                { |_, a, _| compile_paren(a)      }
-  26 value: STRING                                            { |_|       compile_string(_)     }
-  27 value: contain                                           { |_|       compile_contain(_)    }
-  28 value: NUMBER                                            { |_|       compile_number(_)     }
-  29 value: identifier                                        { |_|       compile_identifier(_) }
-  30 contain: "[" contain.body "]"                            { |_, a, _| a }
-  31 identifier: CHARACTER chars                              { |a, b| b.unshift(a)             }
-  32 chars: char                                              { |_|    [_]                      }
-  33 chars: char chars                                        { |a, b| b.unshift(a)             }
-  34 char: CHARACTER                                          
-  35 char: NUMBER                                             
-  36 char: "-"                                                
-  37 contain.body: "^" contain.parts                          { |a, b| b.unshift(a) }
-  38 contain.body: contain.parts                              
-  39 contain.parts: contain.part                              { |_|    [_]          }
-  40 contain.parts: contain.part contain.parts                { |a, b| b.unshift(a) }
-  41 contain.part: contain.char                               
-  42 contain.part: contain.char "-" contain.char              { |a, b, c| [:SET, a[1], c[1]] }
-  43 contain.part: "-"                                        
-  44 contain.char: CHARACTER                                  
-  45 contain.char: NUMBER                                     
-  46 contain.char: ESCAPED                                    
+   0 $start: main $                                                           
+   1 main: expression                                                         { |_| compile_paren(_) }
+   2 expression: group                                                        { |_|    [_]           }
+   3 expression: group expression                                             { |a, b| b.unshift(a)  }
+   4 group: group modifier                                                    { |a, b|    compile_modifier(b, a)     }
+   5 group: group binop group                                                 { |a, b, c| compile_binop(b, a, c)     }
+   6 group: group transitional                                                { |a, b|    compile_transitional(b, a) }
+   7 group: value                                                             
+   8 modifier: "*"                                                            { |_| _[0] }
+   9 modifier: "+"                                                            { |_| _[0] }
+  10 modifier: "?"                                                            { |_| _[0] }
+  11 modifier: "{" NUMBER "}"                                                 
+  12 modifier: "{" "," NUMBER "}"                                             
+  13 modifier: "{" NUMBER "," "}"                                             
+  14 modifier: "{" NUMBER "," NUMBER "}"                                      
+  15 binop: "|"                                                               { |_| _[0] }
+  16 binop: "&"                                                               { |_| _[0] }
+  17 binop: "--"                                                              { |_| _[0] }
+  18 binop: "-"                                                               { |_| _[0] }
+  19 transitional: ":" transitional.type transitional.on chars "<" NUMBER ">" { |_, a, b, c,_, d, _| [a[0], b[0], c, d[1]]   }
+  20 transitional: ":" transitional.type transitional.on "<" NUMBER ">"       { |_, a, b, _, c, _|   [a[0], b[0], "", c[1]]  }
+  21 transitional.type: ">"                                                   
+  22 transitional.type: "<"                                                   
+  23 transitional.on: "$"                                                     
+  24 transitional.on: "%"                                                     
+  25 transitional.on: "@"                                                     
+  26 value: "(" expression ")"                                                { |_, a, _| compile_paren(a)      }
+  27 value: STRING                                                            { |_|       compile_string(_)     }
+  28 value: contain                                                           { |_|       compile_contain(_)    }
+  29 value: NUMBER                                                            { |_|       compile_number(_)     }
+  30 value: identifier                                                        { |_|       compile_identifier(_) }
+  31 contain: "[" contain.body "]"                                            { |_, a, _| a }
+  32 identifier: CHARACTER chars                                              { |a, b| b.unshift(a)             }
+  33 chars: char                                                              { |_|    [_]                      }
+  34 chars: char chars                                                        { |a, b| b.unshift(a)             }
+  35 char: CHARACTER                                                          
+  36 char: NUMBER                                                             
+  37 char: "-"                                                                
+  38 contain.body: "^" contain.parts                                          { |a, b| b.unshift(a) }
+  39 contain.body: contain.parts                                              
+  40 contain.parts: contain.part                                              { |_|    [_]          }
+  41 contain.parts: contain.part contain.parts                                { |a, b| b.unshift(a) }
+  42 contain.part: contain.char                                               
+  43 contain.part: contain.char "-" contain.char                              { |a, b, c| [:SET, a[1], c[1]] }
+  44 contain.part: "-"                                                        
+  45 contain.char: CHARACTER                                                  
+  46 contain.char: NUMBER                                                     
+  47 contain.char: ESCAPED                                                    
 
 
 Precedence:
@@ -183,9 +184,9 @@ Precedence:
       {}
     45/n1: group → group • transitional
       {}
-    46/n1: transitional →  • ":" "<" transitional.type chars NUMBER ">"
+    46/n1: transitional →  • ":" transitional.type transitional.on chars "<" NUMBER ">"
       {}
-    47/n1: transitional →  • ":" "<" transitional.type NUMBER ">"
+    47/n1: transitional →  • ":" transitional.type transitional.on "<" NUMBER ">"
       {}
     transitions:
       expression: State 13
@@ -280,27 +281,6 @@ Precedence:
     63/n1: value → STRING • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
-      $: Rule 26
-      "*": Rule 26
-      "+": Rule 26
-      "?": Rule 26
-      "{": Rule 26
-      "|": Rule 26
-      "&": Rule 26
-      "--": Rule 26
-      "-": Rule 26
-      ":": Rule 26
-      "(": Rule 26
-      STRING: Rule 26
-      "[": Rule 26
-      NUMBER: Rule 26
-      CHARACTER: Rule 26
-      ")": Rule 26
-
-  State 7:
-    64/n1: value → contain • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    reductions:
       $: Rule 27
       "*": Rule 27
       "+": Rule 27
@@ -318,8 +298,8 @@ Precedence:
       CHARACTER: Rule 27
       ")": Rule 27
 
-  State 8:
-    65/r5: value → NUMBER • 
+  State 7:
+    64/n1: value → contain • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 28
@@ -339,8 +319,8 @@ Precedence:
       CHARACTER: Rule 28
       ")": Rule 28
 
-  State 9:
-    66/n1: value → identifier • 
+  State 8:
+    65/r5: value → NUMBER • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 29
@@ -359,6 +339,27 @@ Precedence:
       NUMBER: Rule 29
       CHARACTER: Rule 29
       ")": Rule 29
+
+  State 9:
+    66/n1: value → identifier • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+    reductions:
+      $: Rule 30
+      "*": Rule 30
+      "+": Rule 30
+      "?": Rule 30
+      "{": Rule 30
+      "|": Rule 30
+      "&": Rule 30
+      "--": Rule 30
+      "-": Rule 30
+      ":": Rule 30
+      "(": Rule 30
+      STRING: Rule 30
+      "[": Rule 30
+      NUMBER: Rule 30
+      CHARACTER: Rule 30
+      ")": Rule 30
 
   State 10:
     67/n1: contain → "[" • contain.body "]"
@@ -658,46 +659,52 @@ Precedence:
       ")": Rule 6
 
   State 25:
-    111/n1: transitional → ":" • "<" transitional.type chars NUMBER ">"
+    111/n1: transitional → ":" • transitional.type transitional.on chars "<" NUMBER ">"
       {}
-    112/n1: transitional → ":" • "<" transitional.type NUMBER ">"
+    112/n1: transitional.type →  • ">"
+      {}
+    113/n1: transitional.type →  • "<"
+      {}
+    114/n1: transitional → ":" • transitional.type transitional.on "<" NUMBER ">"
       {}
     transitions:
-      "<": State 44
+      transitional.type: State 44
+      ">": State 45
+      "<": State 46
 
   State 26:
-    113/n2: value → "(" expression • ")"
+    115/n2: value → "(" expression • ")"
       {}
     transitions:
-      ")": State 45
+      ")": State 47
 
   State 27:
-    114/n1: contain → "[" contain.body • "]"
+    116/n1: contain → "[" contain.body • "]"
       {}
     transitions:
-      "]": State 46
+      "]": State 48
 
   State 28:
-    115/n1: contain.body → "^" • contain.parts
+    117/n1: contain.body → "^" • contain.parts
       {}
-    116/n1: contain.parts →  • contain.part
+    118/n1: contain.parts →  • contain.part
       {}
-    117/n1: contain.parts →  • contain.part contain.parts
+    119/n1: contain.parts →  • contain.part contain.parts
       {}
-    118/n1: contain.part →  • contain.char
+    120/n1: contain.part →  • contain.char
       {}
-    119/l6: contain.part →  • contain.char "-" contain.char
+    121/l6: contain.part →  • contain.char "-" contain.char
       {}
-    120/l6: contain.part →  • "-"
+    122/l6: contain.part →  • "-"
       {}
-    121/r5: contain.char →  • CHARACTER
+    123/r5: contain.char →  • CHARACTER
       {}
-    122/r5: contain.char →  • NUMBER
+    124/r5: contain.char →  • NUMBER
       {}
-    123/n1: contain.char →  • ESCAPED
+    125/n1: contain.char →  • ESCAPED
       {}
     transitions:
-      contain.parts: State 47
+      contain.parts: State 49
       contain.part: State 30
       contain.char: State 31
       "-": State 32
@@ -706,34 +713,34 @@ Precedence:
       ESCAPED: State 35
 
   State 29:
-    124/n1: contain.body → contain.parts • 
+    126/n1: contain.body → contain.parts • 
       {"]"}
     reductions:
-      "]": Rule 38
+      "]": Rule 39
 
   State 30:
-    125/n1: contain.parts → contain.part • 
+    127/n1: contain.parts → contain.part • 
       {"]"}
-    126/n1: contain.parts → contain.part • contain.parts
+    128/n1: contain.parts → contain.part • contain.parts
       {}
-    127/n1: contain.parts →  • contain.part
+    129/n1: contain.parts →  • contain.part
       {}
-    128/n1: contain.parts →  • contain.part contain.parts
+    130/n1: contain.parts →  • contain.part contain.parts
       {}
-    129/n1: contain.part →  • contain.char
+    131/n1: contain.part →  • contain.char
       {}
-    130/l6: contain.part →  • contain.char "-" contain.char
+    132/l6: contain.part →  • contain.char "-" contain.char
       {}
-    131/l6: contain.part →  • "-"
+    133/l6: contain.part →  • "-"
       {}
-    132/r5: contain.char →  • CHARACTER
+    134/r5: contain.char →  • CHARACTER
       {}
-    133/r5: contain.char →  • NUMBER
+    135/r5: contain.char →  • NUMBER
       {}
-    134/n1: contain.char →  • ESCAPED
+    136/n1: contain.char →  • ESCAPED
       {}
     transitions:
-      contain.parts: State 48
+      contain.parts: State 50
       contain.part: State 30
       contain.char: State 31
       "-": State 32
@@ -741,33 +748,23 @@ Precedence:
       NUMBER: State 34
       ESCAPED: State 35
     reductions:
-      "]": Rule 39
+      "]": Rule 40
 
   State 31:
-    135/n1: contain.part → contain.char • 
+    137/n1: contain.part → contain.char • 
       {"]", CHARACTER, NUMBER, ESCAPED, "-"}
-    136/l6: contain.part → contain.char • "-" contain.char
+    138/l6: contain.part → contain.char • "-" contain.char
       {}
     transitions:
-      "-": State 49
+      "-": State 51
     reductions:
-      "]": Rule 41
-      CHARACTER: Rule 41
-      NUMBER: Rule 41
-      ESCAPED: Rule 41
+      "]": Rule 42
+      CHARACTER: Rule 42
+      NUMBER: Rule 42
+      ESCAPED: Rule 42
 
   State 32:
-    137/l6: contain.part → "-" • 
-      {"]", CHARACTER, NUMBER, ESCAPED, "-"}
-    reductions:
-      "]": Rule 43
-      CHARACTER: Rule 43
-      NUMBER: Rule 43
-      ESCAPED: Rule 43
-      "-": Rule 43
-
-  State 33:
-    138/r5: contain.char → CHARACTER • 
+    139/l6: contain.part → "-" • 
       {"]", CHARACTER, NUMBER, ESCAPED, "-"}
     reductions:
       "]": Rule 44
@@ -776,8 +773,8 @@ Precedence:
       ESCAPED: Rule 44
       "-": Rule 44
 
-  State 34:
-    139/r5: contain.char → NUMBER • 
+  State 33:
+    140/r5: contain.char → CHARACTER • 
       {"]", CHARACTER, NUMBER, ESCAPED, "-"}
     reductions:
       "]": Rule 45
@@ -786,8 +783,8 @@ Precedence:
       ESCAPED: Rule 45
       "-": Rule 45
 
-  State 35:
-    140/n1: contain.char → ESCAPED • 
+  State 34:
+    141/r5: contain.char → NUMBER • 
       {"]", CHARACTER, NUMBER, ESCAPED, "-"}
     reductions:
       "]": Rule 46
@@ -796,48 +793,19 @@ Precedence:
       ESCAPED: Rule 46
       "-": Rule 46
 
-  State 36:
-    141/r5: identifier → CHARACTER chars • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+  State 35:
+    142/n1: contain.char → ESCAPED • 
+      {"]", CHARACTER, NUMBER, ESCAPED, "-"}
     reductions:
-      $: Rule 31
-      "*": Rule 31
-      "+": Rule 31
-      "?": Rule 31
-      "{": Rule 31
-      "|": Rule 31
-      "&": Rule 31
-      "--": Rule 31
-      "-": Rule 31
-      ":": Rule 31
-      "(": Rule 31
-      STRING: Rule 31
-      "[": Rule 31
-      NUMBER: Rule 31
-      CHARACTER: Rule 31
-      ")": Rule 31
+      "]": Rule 47
+      CHARACTER: Rule 47
+      NUMBER: Rule 47
+      ESCAPED: Rule 47
+      "-": Rule 47
 
-  State 37:
-    142/n1: chars → char • 
+  State 36:
+    143/r5: identifier → CHARACTER chars • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    143/n1: chars → char • chars
-      {}
-    144/n1: chars →  • char
-      {}
-    145/n1: chars →  • char chars
-      {}
-    146/r5: char →  • CHARACTER
-      {}
-    147/r5: char →  • NUMBER
-      {}
-    148/l6: char →  • "-"
-      {}
-    transitions:
-      chars: State 50
-      char: State 37
-      CHARACTER: State 38
-      NUMBER: State 39
-      "-": State 40
     reductions:
       $: Rule 32
       "*": Rule 32
@@ -847,40 +815,55 @@ Precedence:
       "|": Rule 32
       "&": Rule 32
       "--": Rule 32
+      "-": Rule 32
       ":": Rule 32
       "(": Rule 32
       STRING: Rule 32
       "[": Rule 32
+      NUMBER: Rule 32
+      CHARACTER: Rule 32
       ")": Rule 32
 
-  State 38:
-    149/r5: char → CHARACTER • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    reductions:
-      $: Rule 34
-      "*": Rule 34
-      "+": Rule 34
-      "?": Rule 34
-      "{": Rule 34
-      "|": Rule 34
-      "&": Rule 34
-      "--": Rule 34
-      "-": Rule 34
-      ":": Rule 34
-      "(": Rule 34
-      STRING: Rule 34
-      "[": Rule 34
-      NUMBER: Rule 34
-      CHARACTER: Rule 34
-      ")": Rule 34
-
-  State 39:
-    150/r5: char → NUMBER • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    151/n1: transitional → ":" "<" transitional.type NUMBER • ">"
+  State 37:
+    144/n1: chars → char • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")", "<"}
+    145/n1: chars → char • chars
+      {}
+    146/n1: chars →  • char
+      {}
+    147/n1: chars →  • char chars
+      {}
+    148/r5: char →  • CHARACTER
+      {}
+    149/r5: char →  • NUMBER
+      {}
+    150/l6: char →  • "-"
       {}
     transitions:
-      ">": State 64
+      chars: State 52
+      char: State 37
+      CHARACTER: State 38
+      NUMBER: State 39
+      "-": State 40
+    reductions:
+      $: Rule 33
+      "*": Rule 33
+      "+": Rule 33
+      "?": Rule 33
+      "{": Rule 33
+      "|": Rule 33
+      "&": Rule 33
+      "--": Rule 33
+      ":": Rule 33
+      "(": Rule 33
+      STRING: Rule 33
+      "[": Rule 33
+      ")": Rule 33
+      "<": Rule 33
+
+  State 38:
+    151/r5: char → CHARACTER • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")", "<"}
     reductions:
       $: Rule 35
       "*": Rule 35
@@ -898,10 +881,11 @@ Precedence:
       NUMBER: Rule 35
       CHARACTER: Rule 35
       ")": Rule 35
+      "<": Rule 35
 
-  State 40:
-    152/l6: char → "-" • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+  State 39:
+    152/r5: char → NUMBER • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")", "<"}
     reductions:
       $: Rule 36
       "*": Rule 36
@@ -919,58 +903,81 @@ Precedence:
       NUMBER: Rule 36
       CHARACTER: Rule 36
       ")": Rule 36
+      "<": Rule 36
+
+  State 40:
+    153/l6: char → "-" • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")", "<"}
+    reductions:
+      $: Rule 37
+      "*": Rule 37
+      "+": Rule 37
+      "?": Rule 37
+      "{": Rule 37
+      "|": Rule 37
+      "&": Rule 37
+      "--": Rule 37
+      "-": Rule 37
+      ":": Rule 37
+      "(": Rule 37
+      STRING: Rule 37
+      "[": Rule 37
+      NUMBER: Rule 37
+      CHARACTER: Rule 37
+      ")": Rule 37
+      "<": Rule 37
 
   State 41:
-    153/n3: modifier → "{" NUMBER • "}"
+    154/n3: modifier → "{" NUMBER • "}"
       {}
-    154/n3: modifier → "{" NUMBER • "," "}"
+    155/n3: modifier → "{" NUMBER • "," "}"
       {}
-    155/n3: modifier → "{" NUMBER • "," NUMBER "}"
+    156/n3: modifier → "{" NUMBER • "," NUMBER "}"
       {}
     transitions:
-      "}": State 51
-      ",": State 52
+      "}": State 53
+      ",": State 54
 
   State 42:
-    156/n3: modifier → "{" "," • NUMBER "}"
+    157/n3: modifier → "{" "," • NUMBER "}"
       {}
     transitions:
-      NUMBER: State 53
+      NUMBER: State 55
 
   State 43:
-    157/n1: group → group binop group • 
+    158/n1: group → group binop group • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    158/n1: group → group • modifier
+    159/n1: group → group • modifier
       {}
-    159/l4: modifier →  • "*"
+    160/l4: modifier →  • "*"
       {}
-    160/l4: modifier →  • "+"
+    161/l4: modifier →  • "+"
       {}
-    161/l4: modifier →  • "?"
+    162/l4: modifier →  • "?"
       {}
-    162/n3: modifier →  • "{" NUMBER "}"
+    163/n3: modifier →  • "{" NUMBER "}"
       {}
-    163/n3: modifier →  • "{" "," NUMBER "}"
+    164/n3: modifier →  • "{" "," NUMBER "}"
       {}
-    164/n3: modifier →  • "{" NUMBER "," "}"
+    165/n3: modifier →  • "{" NUMBER "," "}"
       {}
-    165/n3: modifier →  • "{" NUMBER "," NUMBER "}"
+    166/n3: modifier →  • "{" NUMBER "," NUMBER "}"
       {}
-    166/n1: group → group • binop group
+    167/n1: group → group • binop group
       {}
-    167/l6: binop →  • "|"
+    168/l6: binop →  • "|"
       {}
-    168/l6: binop →  • "&"
+    169/l6: binop →  • "&"
       {}
-    169/l6: binop →  • "--"
+    170/l6: binop →  • "--"
       {}
-    170/l6: binop →  • "-"
+    171/l6: binop →  • "-"
       {}
-    171/n1: group → group • transitional
+    172/n1: group → group • transitional
       {}
-    172/n1: transitional →  • ":" "<" transitional.type chars NUMBER ">"
+    173/n1: transitional →  • ":" transitional.type transitional.on chars "<" NUMBER ">"
       {}
-    173/n1: transitional →  • ":" "<" transitional.type NUMBER ">"
+    174/n1: transitional →  • ":" transitional.type transitional.on "<" NUMBER ">"
       {}
     transitions:
       modifier: State 14
@@ -995,117 +1002,131 @@ Precedence:
       ")": Rule 5
 
   State 44:
-    174/n1: transitional → ":" "<" • transitional.type chars NUMBER ">"
+    175/n1: transitional → ":" transitional.type • transitional.on chars "<" NUMBER ">"
       {}
-    175/n1: transitional.type →  • ">"
+    176/n1: transitional.on →  • "$"
       {}
-    176/n1: transitional.type →  • "<"
+    177/n1: transitional.on →  • "%"
       {}
-    177/n1: transitional.type →  • "%"
+    178/n1: transitional.on →  • "@"
       {}
-    178/n1: transitional.type →  • "$"
-      {}
-    179/n1: transitional → ":" "<" • transitional.type NUMBER ">"
+    179/n1: transitional → ":" transitional.type • transitional.on "<" NUMBER ">"
       {}
     transitions:
-      transitional.type: State 54
-      ">": State 55
-      "<": State 56
-      "%": State 57
-      "$": State 58
+      transitional.on: State 56
+      "$": State 57
+      "%": State 58
+      "@": State 59
 
   State 45:
-    180/n2: value → "(" expression ")" • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+    180/n1: transitional.type → ">" • 
+      {"$", "%", "@"}
     reductions:
-      $: Rule 25
-      "*": Rule 25
-      "+": Rule 25
-      "?": Rule 25
-      "{": Rule 25
-      "|": Rule 25
-      "&": Rule 25
-      "--": Rule 25
-      "-": Rule 25
-      ":": Rule 25
-      "(": Rule 25
-      STRING: Rule 25
-      "[": Rule 25
-      NUMBER: Rule 25
-      CHARACTER: Rule 25
-      ")": Rule 25
+      "$": Rule 21
+      "%": Rule 21
+      "@": Rule 21
 
   State 46:
-    181/n1: contain → "[" contain.body "]" • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+    181/n1: transitional.type → "<" • 
+      {"$", "%", "@"}
     reductions:
-      $: Rule 30
-      "*": Rule 30
-      "+": Rule 30
-      "?": Rule 30
-      "{": Rule 30
-      "|": Rule 30
-      "&": Rule 30
-      "--": Rule 30
-      "-": Rule 30
-      ":": Rule 30
-      "(": Rule 30
-      STRING: Rule 30
-      "[": Rule 30
-      NUMBER: Rule 30
-      CHARACTER: Rule 30
-      ")": Rule 30
+      "$": Rule 22
+      "%": Rule 22
+      "@": Rule 22
 
   State 47:
-    182/n1: contain.body → "^" contain.parts • 
-      {"]"}
+    182/n2: value → "(" expression ")" • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
-      "]": Rule 37
+      $: Rule 26
+      "*": Rule 26
+      "+": Rule 26
+      "?": Rule 26
+      "{": Rule 26
+      "|": Rule 26
+      "&": Rule 26
+      "--": Rule 26
+      "-": Rule 26
+      ":": Rule 26
+      "(": Rule 26
+      STRING: Rule 26
+      "[": Rule 26
+      NUMBER: Rule 26
+      CHARACTER: Rule 26
+      ")": Rule 26
 
   State 48:
-    183/n1: contain.parts → contain.part contain.parts • 
-      {"]"}
+    183/n1: contain → "[" contain.body "]" • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
-      "]": Rule 40
+      $: Rule 31
+      "*": Rule 31
+      "+": Rule 31
+      "?": Rule 31
+      "{": Rule 31
+      "|": Rule 31
+      "&": Rule 31
+      "--": Rule 31
+      "-": Rule 31
+      ":": Rule 31
+      "(": Rule 31
+      STRING: Rule 31
+      "[": Rule 31
+      NUMBER: Rule 31
+      CHARACTER: Rule 31
+      ")": Rule 31
 
   State 49:
-    184/l6: contain.part → contain.char "-" • contain.char
+    184/n1: contain.body → "^" contain.parts • 
+      {"]"}
+    reductions:
+      "]": Rule 38
+
+  State 50:
+    185/n1: contain.parts → contain.part contain.parts • 
+      {"]"}
+    reductions:
+      "]": Rule 41
+
+  State 51:
+    186/l6: contain.part → contain.char "-" • contain.char
       {}
-    185/r5: contain.char →  • CHARACTER
+    187/r5: contain.char →  • CHARACTER
       {}
-    186/r5: contain.char →  • NUMBER
+    188/r5: contain.char →  • NUMBER
       {}
-    187/n1: contain.char →  • ESCAPED
+    189/n1: contain.char →  • ESCAPED
       {}
     transitions:
-      contain.char: State 59
+      contain.char: State 60
       CHARACTER: State 33
       NUMBER: State 34
       ESCAPED: State 35
 
-  State 50:
-    188/n1: chars → char chars • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+  State 52:
+    190/n1: chars → char chars • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")", "<"}
     reductions:
-      $: Rule 33
-      "*": Rule 33
-      "+": Rule 33
-      "?": Rule 33
-      "{": Rule 33
-      "|": Rule 33
-      "&": Rule 33
-      "--": Rule 33
-      "-": Rule 33
-      ":": Rule 33
-      "(": Rule 33
-      STRING: Rule 33
-      "[": Rule 33
-      NUMBER: Rule 33
-      CHARACTER: Rule 33
-      ")": Rule 33
+      $: Rule 34
+      "*": Rule 34
+      "+": Rule 34
+      "?": Rule 34
+      "{": Rule 34
+      "|": Rule 34
+      "&": Rule 34
+      "--": Rule 34
+      "-": Rule 34
+      ":": Rule 34
+      "(": Rule 34
+      STRING: Rule 34
+      "[": Rule 34
+      NUMBER: Rule 34
+      CHARACTER: Rule 34
+      ")": Rule 34
+      "<": Rule 34
 
-  State 51:
-    189/n3: modifier → "{" NUMBER "}" • 
+  State 53:
+    191/n3: modifier → "{" NUMBER "}" • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 11
@@ -1125,87 +1146,83 @@ Precedence:
       CHARACTER: Rule 11
       ")": Rule 11
 
-  State 52:
-    190/n3: modifier → "{" NUMBER "," • "}"
-      {}
-    191/n3: modifier → "{" NUMBER "," • NUMBER "}"
-      {}
-    transitions:
-      "}": State 60
-      NUMBER: State 61
-
-  State 53:
-    192/n3: modifier → "{" "," NUMBER • "}"
-      {}
-    transitions:
-      "}": State 62
-
   State 54:
-    193/n1: transitional → ":" "<" transitional.type • chars NUMBER ">"
+    192/n3: modifier → "{" NUMBER "," • "}"
       {}
-    194/n1: chars →  • char
-      {}
-    195/n1: chars →  • char chars
-      {}
-    196/r5: char →  • CHARACTER
-      {}
-    197/r5: char →  • NUMBER
-      {}
-    198/l6: char →  • "-"
-      {}
-    199/n1: transitional → ":" "<" transitional.type • NUMBER ">"
+    193/n3: modifier → "{" NUMBER "," • NUMBER "}"
       {}
     transitions:
-      chars: State 63
+      "}": State 61
+      NUMBER: State 62
+
+  State 55:
+    194/n3: modifier → "{" "," NUMBER • "}"
+      {}
+    transitions:
+      "}": State 63
+
+  State 56:
+    195/n1: transitional → ":" transitional.type transitional.on • chars "<" NUMBER ">"
+      {}
+    196/n1: chars →  • char
+      {}
+    197/n1: chars →  • char chars
+      {}
+    198/r5: char →  • CHARACTER
+      {}
+    199/r5: char →  • NUMBER
+      {}
+    200/l6: char →  • "-"
+      {}
+    201/n1: transitional → ":" transitional.type transitional.on • "<" NUMBER ">"
+      {}
+    transitions:
+      chars: State 64
       char: State 37
       CHARACTER: State 38
       NUMBER: State 39
       "-": State 40
-
-  State 55:
-    200/n1: transitional.type → ">" • 
-      {CHARACTER, NUMBER, "-"}
-    reductions:
-      CHARACTER: Rule 21
-      NUMBER: Rule 21
-      "-": Rule 21
-
-  State 56:
-    201/n1: transitional.type → "<" • 
-      {CHARACTER, NUMBER, "-"}
-    reductions:
-      CHARACTER: Rule 22
-      NUMBER: Rule 22
-      "-": Rule 22
+      "<": State 65
 
   State 57:
-    202/n1: transitional.type → "%" • 
-      {CHARACTER, NUMBER, "-"}
+    202/n1: transitional.on → "$" • 
+      {CHARACTER, NUMBER, "-", "<"}
     reductions:
       CHARACTER: Rule 23
       NUMBER: Rule 23
       "-": Rule 23
+      "<": Rule 23
 
   State 58:
-    203/n1: transitional.type → "$" • 
-      {CHARACTER, NUMBER, "-"}
+    203/n1: transitional.on → "%" • 
+      {CHARACTER, NUMBER, "-", "<"}
     reductions:
       CHARACTER: Rule 24
       NUMBER: Rule 24
       "-": Rule 24
+      "<": Rule 24
 
   State 59:
-    204/l6: contain.part → contain.char "-" contain.char • 
-      {"]", CHARACTER, NUMBER, ESCAPED, "-"}
+    204/n1: transitional.on → "@" • 
+      {CHARACTER, NUMBER, "-", "<"}
     reductions:
-      "]": Rule 42
-      CHARACTER: Rule 42
-      NUMBER: Rule 42
-      ESCAPED: Rule 42
-      "-": Rule 42
+      CHARACTER: Rule 25
+      NUMBER: Rule 25
+      "-": Rule 25
+      "<": Rule 25
 
   State 60:
-    205/n3: modifier → "{" NUMBER "," "}" • 
+    205/l6: contain.part → contain.char "-" contain.char • 
+      {"]", CHARACTER, NUMBER, ESCAPED, "-"}
+    reductions:
+      "]": Rule 43
+      CHARACTER: Rule 43
+      NUMBER: Rule 43
+      ESCAPED: Rule 43
+      "-": Rule 43
+
+  State 61:
+    206/n3: modifier → "{" NUMBER "," "}" • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 13
@@ -1225,14 +1242,14 @@ Precedence:
       CHARACTER: Rule 13
       ")": Rule 13
 
-  State 61:
-    206/n3: modifier → "{" NUMBER "," NUMBER • "}"
+  State 62:
+    207/n3: modifier → "{" NUMBER "," NUMBER • "}"
       {}
     transitions:
-      "}": State 65
+      "}": State 66
 
-  State 62:
-    207/n3: modifier → "{" "," NUMBER "}" • 
+  State 63:
+    208/n3: modifier → "{" "," NUMBER "}" • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 12
@@ -1252,35 +1269,20 @@ Precedence:
       CHARACTER: Rule 12
       ")": Rule 12
 
-  State 63:
-    208/n1: transitional → ":" "<" transitional.type chars • NUMBER ">"
+  State 64:
+    209/n1: transitional → ":" transitional.type transitional.on chars • "<" NUMBER ">"
       {}
     transitions:
-      NUMBER: State 66
-
-  State 64:
-    209/n1: transitional → ":" "<" transitional.type NUMBER ">" • 
-      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
-    reductions:
-      $: Rule 20
-      "*": Rule 20
-      "+": Rule 20
-      "?": Rule 20
-      "{": Rule 20
-      "|": Rule 20
-      "&": Rule 20
-      "--": Rule 20
-      "-": Rule 20
-      ":": Rule 20
-      "(": Rule 20
-      STRING: Rule 20
-      "[": Rule 20
-      NUMBER: Rule 20
-      CHARACTER: Rule 20
-      ")": Rule 20
+      "<": State 67
 
   State 65:
-    210/n3: modifier → "{" NUMBER "," NUMBER "}" • 
+    210/n1: transitional → ":" transitional.type transitional.on "<" • NUMBER ">"
+      {}
+    transitions:
+      NUMBER: State 68
+
+  State 66:
+    211/n3: modifier → "{" NUMBER "," NUMBER "}" • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 14
@@ -1300,14 +1302,47 @@ Precedence:
       CHARACTER: Rule 14
       ")": Rule 14
 
-  State 66:
-    211/n1: transitional → ":" "<" transitional.type chars NUMBER • ">"
+  State 67:
+    212/n1: transitional → ":" transitional.type transitional.on chars "<" • NUMBER ">"
       {}
     transitions:
-      ">": State 67
+      NUMBER: State 69
 
-  State 67:
-    212/n1: transitional → ":" "<" transitional.type chars NUMBER ">" • 
+  State 68:
+    213/n1: transitional → ":" transitional.type transitional.on "<" NUMBER • ">"
+      {}
+    transitions:
+      ">": State 70
+
+  State 69:
+    214/n1: transitional → ":" transitional.type transitional.on chars "<" NUMBER • ">"
+      {}
+    transitions:
+      ">": State 71
+
+  State 70:
+    215/n1: transitional → ":" transitional.type transitional.on "<" NUMBER ">" • 
+      {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
+    reductions:
+      $: Rule 20
+      "*": Rule 20
+      "+": Rule 20
+      "?": Rule 20
+      "{": Rule 20
+      "|": Rule 20
+      "&": Rule 20
+      "--": Rule 20
+      "-": Rule 20
+      ":": Rule 20
+      "(": Rule 20
+      STRING: Rule 20
+      "[": Rule 20
+      NUMBER: Rule 20
+      CHARACTER: Rule 20
+      ")": Rule 20
+
+  State 71:
+    216/n1: transitional → ":" transitional.type transitional.on chars "<" NUMBER ">" • 
       {$, "*", "+", "?", "{", "|", "&", "--", "-", ":", "(", STRING, "[", NUMBER, CHARACTER, ")"}
     reductions:
       $: Rule 19

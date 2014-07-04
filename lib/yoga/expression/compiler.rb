@@ -26,6 +26,41 @@ module Yoga
         end
       end
 
+      def compile_transitional(data, expression)
+        trans, state_type, name, level = data
+        name = name.map(&:last).join
+        p state_type
+        parts = case state_type
+        when :DOLLAR # these are accepting states
+          expression.accepting
+        when :PERCENT # starting states
+          expression.starting
+        when :AT # any states
+          expression.parts
+        end
+
+        parts.each do |part|
+          case trans
+          when :LESSER # <, transitions out of
+            part.transitions.each do |tran|
+              tran.prec.name = name
+              tran.prec.level = level.to_i
+            end
+          when :GREATER # >, transitions into
+            trans_to = expression.parts.
+              map(&:transitions).map(&:to_a).flatten.
+              select { |_| _.to == part }
+
+            trans_to.each do |tran|
+              tran.prec.name = name
+              tran.prec.level = level.to_i
+            end
+          end
+        end
+
+        expression
+      end
+
       def compile_paren(expression)
         machine = Machine.new
 
@@ -136,6 +171,9 @@ module Yoga
         machine = Machine.new
         machine.merge(left)
         machine.merge(right)
+
+
+
         machine
       end
 
@@ -151,20 +189,14 @@ module Yoga
           end
         end
 
-        union.minimize!
+        union#.minimize!
       end
 
       def compile_difference(left, right)
         union = compile_union(left, right)
         union.determinitize!
 
-        union.accepting.each do |accept|
-          if accept.contains_parts_from?(right, accepting: true)
-            accept.accepting = false
-          end
-        end
-
-        union#.minimize!
+        union.minimize_transitions
       end
 
       def compile_sdifference(left, right)
@@ -180,7 +212,7 @@ module Yoga
       private
 
       def ensure_minimal(machine)
-        machine.minimize_starting! unless machine.minimal?
+        machine.minimize_starting unless machine.minimal?
 
         starting, accepting = machine.starting.first,
           machine.accepting.first

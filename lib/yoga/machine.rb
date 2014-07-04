@@ -1,3 +1,4 @@
+require "yoga/machine/precedence"
 require "yoga/machine/transition"
 require "yoga/machine/part"
 require "yoga/machine/minimizable"
@@ -13,7 +14,7 @@ module Yoga
     include Dotable
     include Determinitizable
     include Runable
-    include Associationable
+    include Helpers
 
     def_association :parts, Part
 

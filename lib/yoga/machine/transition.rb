@@ -4,7 +4,7 @@ require "forwardable"
 
 module Yoga
   class Machine
-    class Transition < Struct.new(:type, :on, :to)
+    class Transition < Struct.new(:type, :on, :to, :prec)
 
       include Enumerable
       extend Forwardable
@@ -21,6 +21,24 @@ module Yoga
 
         self.type ||= :inclusion
         self.on   ||= Set.new
+        self.prec ||= DEFAULT_PRECEDENCE
+      end
+
+      def initialize_copy(old)
+        super
+        self.on   = old.on.clone
+        self.prec = old.prec.clone
+      end
+
+      def <=>(other)
+        return other <=> self unless other.is_a? Transition
+
+        [:type, :to, :prec].each do |prop|
+          comp = self[prop] <=> other[prop]
+          return comp unless !comp || comp.zero?
+        end
+
+        0
       end
 
       def match?(character)
@@ -45,11 +63,13 @@ module Yoga
           out << "ε"
         end
 
-        if epsilon? || none?
-          out
-        else
+        if !epsilon? && !none?
           out << Dotable.stringify_alphabet(self)
         end
+
+          out << " / #{prec.name}(#{prec.level})"
+
+        out
       end
 
       def from_hash(hash)

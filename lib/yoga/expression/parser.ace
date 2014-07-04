@@ -22,6 +22,7 @@
 %token COMMA ","
 %token PERCENT "%"
 %token DOLLAR "$"
+%token AT "@"
 %token ESCAPED
 %token CHARACTER
 %token STRING
@@ -59,12 +60,13 @@ binop: UNION       { |_| _[0] }
      | SDIFFERENCE { |_| _[0] }
      | DIFFERENCE  { |_| _[0] }
 
-transitional: COLON LESSER transitional.type chars NUMBER GREATER
-                { |_, _, a, b, c,_| [a, b, c]   }
-            | COLON LESSER transitional.type NUMBER GREATER
-                { |_, _, a, b, _|   [a, nil, b] }
+transitional: COLON transitional.type transitional.on chars LESSER NUMBER GREATER
+                { |_, a, b, c,_, d, _| [a[0], b[0], c, d[1]]   }
+            | COLON transitional.type transitional.on LESSER NUMBER GREATER
+                { |_, a, b, _, c, _|   [a[0], b[0], "", c[1]]  }
 
-transitional.type: GREATER | LESSER | PERCENT | DOLLAR
+transitional.type: GREATER | LESSER
+transitional.on: DOLLAR | PERCENT | AT
 
 value: LPAREN expression RPAREN { |_, a, _| compile_paren(a)      }
      | STRING                   { |_|       compile_string(_)     }

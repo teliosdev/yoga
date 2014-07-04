@@ -5,15 +5,14 @@ module Yoga
     class Part
 
       include Comparable
-      include Associationable
-
-      attr_writer :accepting
-      attr_writer :starting
+      include Helpers
 
       attr_accessor :parts
       attr_accessor :id
+      battr_accessor :accepting
+      battr_accessor :starting
 
-      def_association :transitions, Transition
+      def_association :transitions, Transition, :sorted
       def_association :parts, Part
 
       def initialize
@@ -26,20 +25,18 @@ module Yoga
         self.transitions = transitions.map(&:clone)
       end
 
-      def accepting?
-        @accepting
-      end
-
-      def starting?
-        @starting
-      end
-
       def stuck?
         false
       end
 
       def transitions_for(character)
-        transitions.select { |_| _.match?(character) }
+        trans = transitions.select { |_| _.match?(character) }
+
+        if trans.size > 1
+          $stderr.puts "WARN: transitions for #{character.inspect} exceeded 1 (#{trans.size})"
+        end
+
+        trans
       end
 
       def transition(character)
@@ -54,7 +51,7 @@ module Yoga
           machine.parts.select { |_| _.accepting? || _.starting? }
         when options[:accepting]
           machine.accepting
-        when options[:Starting]
+        when options[:starting]
           machine.starting
         else
           machine.parts
@@ -74,7 +71,7 @@ module Yoga
         if other.is_a? Part
           id <=> other.id
         else
-          id <=> other
+          other <=> id
         end
       end
 

@@ -8,10 +8,20 @@ module Yoga
 
       def minimize!
         @minimizing = true
-        minimize_epsilon_transitions!
-        minimize_starting!
-        minimize_parts!
-        minimize_transitions! true
+        change_made = true
+        count = 100
+        i = 0
+
+        while change_made
+          ary = [
+            minimize_epsilon_transitions,
+            minimize_parts
+          ]
+          change_made = ary.any?
+
+          p ary
+        end
+
         #minimize_nondistinct!
         # Minimize parts again because nondistinct likes to leave
         # parts that are not on the path from a starting part.
@@ -27,8 +37,9 @@ module Yoga
 
       # Make sure that there is only one starting state and one
       # accepting state.
-      def minimize_starting!
-        return self if deterministic?
+      def minimize_starting
+        return false if deterministic?
+        changed = false
 
         raise NoPartError,
           "Machine contains no starting parts" unless starting.any?
@@ -45,6 +56,7 @@ module Yoga
           end
 
           new_starting.starting = true
+          changed = true
         end
 
         if accepting.size > 1
@@ -56,43 +68,48 @@ module Yoga
           end
 
           new_ending.accepting = true
+          changed = true
         end
 
-        self
+        changed
       end
 
       # Remove excess epsilon transitions.
-      def minimize_epsilon_transitions!
-        return self if deterministic?
+      def minimize_epsilon_transitions
+        return false if deterministic?
+        change_made = false
 
         parts.each do |part|
-          fixed_point(part.transitions) do
-            part.transitions.select(&:epsilon?).each do |transition|
-              to_state = transition.to
-              if to_state.transitions.all?(&:epsilon?)
-                part.transitions.merge(to_state.transitions)
-                part.transitions.delete(transition)
-                part.accepting = part.accepting? || to_state.accepting?
-                part.starting = part.starting? || to_state.starting?
-              elsif to_state == part
-                part.transitions.delete(transition)
-              end
-            end
+          part.transitions.select(&:epsilon?).each do |transition|
+            to_state = transition.to
+            if to_state.transitions.all? { |_| _.to != part }
+              part.transitions.merge(to_state.transitions)
+              part.transitions.delete(transition)
+              part.accepting = part.accepting? || to_state.accepting?
+              part.starting = part.starting? || to_state.starting?
+              parts.delete(to_state)
 
-            if part.transitions.size == 1 && part.transitions.first.epsilon?
-              to_merge = part.transitions.first
-              part.transitions.merge(to_merge.to.transitions)
-              part.transitions.delete(to_merge)
+              parts.each do |p|
+                p.transitions.each do |trans|
+                  if trans.to == to_state
+                    trans.to = part
+                  end
+                end
+              end
+              change_made = true
+            elsif to_state == part
+              part.transitions.delete(transition)
+              change_made = true
             end
           end
         end
 
-        self
+        change_made
       end
 
       # Removes parts that are not on a path from a starting state
       # to an accepting state.
-      def minimize_parts!
+      def minimize_parts
         acceptable = Set.new
 
         starting.each do |start|
@@ -112,11 +129,11 @@ module Yoga
 
         self.parts = acceptable
 
-        self
+        destroyed.any?
       end
 
       # Combines transitions that lead to the same state.
-      def minimize_transitions!(allow_exclusion = false)
+      def minimize_transitions(allow_exclusion = false)
         parts.each do |part|
           transitionables = part.transitions.group_by { |t| t.to }
           transitions = Set.new
@@ -151,7 +168,7 @@ module Yoga
         self
       end
 
-      def minimize_nondistinct!
+      def minimize_nondistinct
         return self unless deterministic?
         distinct = {}
 

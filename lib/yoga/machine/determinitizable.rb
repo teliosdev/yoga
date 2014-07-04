@@ -23,7 +23,7 @@ module Yoga
       def determinitize!
         return self if deterministic?
 
-        minimize_starting! unless minimal?
+        minimize_starting unless minimal?
         starting = self.starting.first
         @old_parts, self.parts = self.parts, []
         part = determinitize_part(starting)
