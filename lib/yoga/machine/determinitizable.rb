@@ -1,3 +1,5 @@
+require "thread"
+
 module Yoga
   class Machine
 
@@ -7,6 +9,7 @@ module Yoga
     # construction algorithm.
     module Determinitizable
 
+      NUMBER_OF_THREADS = 5
 
       def determinitize
         clone.determinitize!
@@ -24,36 +27,41 @@ module Yoga
         return self if deterministic?
 
         minimize_starting unless minimal?
-        starting = self.starting.first
+        start = self.parts.create
+        start.parts = closure([starting.first])
+        start.accepting = start.parts.any?(&:accepting?)
         @old_parts, self.parts = self.parts, []
-        part = determinitize_part(starting)
-        @deterministic = true
-        part.starting = true
 
-        self
-      end
+        workload = [start]
 
-      def determinitize_part(parts)
-        parts = closure([parts].flatten.to_set)
+        until workload.empty? do
+          part = workload.pop
 
-        if determinital = self.parts.find { |_| _.parts == parts }
-          return determinital
-        end
+          alphabet.each do |char|
+            moves = move(parts, char)
 
-        part = self.parts.create
-        part.parts = parts
-        part.accepting = true if parts.any?(&:accepting?)
+            if moves.any?
+              moves = closure(moves)
 
-        alphabet.each do |char|
-          moves = move(part.parts, char)
+              transitional = self.parts.
+                find { |_| _.parts == moves } || begin
+                new_part = self.parts.create
+                new_part.parts = moves
+                new_part.accepting = new_part.parts.any?(&:accepting?)
+                workload << new_part
+                new_part
+              end
 
-          unless moves.empty?
-            transition = determinitize_part(moves)
-            part.transitions.create(on: [char].to_set, to: transition)
+              part.transitions.
+                create(on: Set.new([char]), to: transitional)
+            end
           end
         end
 
-        part
+        @deterministic = true
+        start.starting = true
+
+        self
       end
 
       def closure(parts)
@@ -76,7 +84,7 @@ module Yoga
           moves.merge part.transitions_for(character).map(&:to)
         end
 
-        moves.to_a
+        moves
       end
     end
   end

@@ -29,7 +29,6 @@ module Yoga
       def compile_transitional(data, expression)
         trans, state_type, name, level = data
         name = name.map(&:last).join
-        p state_type
         parts = case state_type
         when :DOLLAR # these are accepting states
           expression.accepting
@@ -111,8 +110,6 @@ module Yoga
 
         transition = starting.transitions.create(to: ending)
 
-        p contain
-
         contain.each do |part|
           case part[0]
           when :INVERT
@@ -171,8 +168,6 @@ module Yoga
         machine = Machine.new
         machine.merge(left)
         machine.merge(right)
-
-
 
         machine
       end
