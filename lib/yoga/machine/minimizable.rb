@@ -12,6 +12,10 @@ module Yoga
         minimize_starting!
         minimize_parts!
         minimize_transitions! true
+        #minimize_nondistinct!
+        # Minimize parts again because nondistinct likes to leave
+        # parts that are not on the path from a starting part.
+        #minimize_parts!
         @minimizing = false
 
         self
@@ -24,12 +28,13 @@ module Yoga
       # Make sure that there is only one starting state and one
       # accepting state.
       def minimize_starting!
+        return self if deterministic?
+
         raise NoPartError,
           "Machine contains no starting parts" unless starting.any?
         raise NoPartError,
           "Machine contains no accepting parts" unless accepting.any?
 
-        return self if deterministic?
 
         if starting.size > 1
           new_starting = parts.create
@@ -58,6 +63,8 @@ module Yoga
 
       # Remove excess epsilon transitions.
       def minimize_epsilon_transitions!
+        return self if deterministic?
+
         parts.each do |part|
           fixed_point(part.transitions) do
             part.transitions.select(&:epsilon?).each do |transition|
@@ -94,7 +101,16 @@ module Yoga
           acceptable.merge(path) if path
         end
 
-        self.parts = acceptable.select { |_| leads_to_accepting?(_) }
+        acceptable.select! { |_| leads_to_accepting?(_) }
+        destroyed = self.parts - acceptable
+
+        parts.each do |part|
+          part.transitions.reject! do |transition|
+            destroyed.include?(transition.to)
+          end
+        end
+
+        self.parts = acceptable
 
         self
       end
@@ -136,6 +152,7 @@ module Yoga
       end
 
       def minimize_nondistinct!
+        return self unless deterministic?
         distinct = {}
 
         parts.to_a.combination(2) do |p, q|

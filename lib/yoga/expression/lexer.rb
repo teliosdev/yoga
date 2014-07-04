@@ -50,58 +50,63 @@ module Yoga
       end
 
       def scan_operator
-        if @scanner.scan(/\|/)
-          tokens << [:UNION]
-        elsif @scanner.scan(/\&/)
-          tokens << [:INTERSECT]
-        elsif @scanner.scan(/--/)
-          tokens << [:SDIFFERENCE]
-        elsif @scanner.scan(/-/)
-          tokens << [:DIFFERENCE]
-        elsif @scanner.scan(/\*/)
-          tokens << [:STAR]
-        elsif @scanner.scan(/\+/)
-          tokens << [:PLUS]
-        elsif @scanner.scan(/\?/)
-          tokens << [:OPTIONAL]
-        elsif @scanner.scan(/\(/)
-          tokens << [:LPAREN]
-        elsif @scanner.scan(/\)/)
-          tokens << [:RPAREN]
-        elsif @scanner.scan(/\[/)
-          tokens << [:LBRACK]
-        elsif @scanner.scan(/\]/)
-          tokens << [:RBRACK]
-        elsif @scanner.scan(/\\"/)
-          tokens << [:ESCAPED]
-        elsif @scanner.scan(/\\'/)
-          tokens << [:ESCAPED]
-        elsif @scanner.scan(/\^/)
-          tokens << [:INVERT]
-        else
-          scan_repetition
-        end
-      end
-
-      def scan_repetition
-        if @scanner.scan(/\{([0-9]*)(\,([0-9]*))?\}/)
-          tokens << [:REPETITION,
-            @scanner[1],
-            !!@scanner[2],
-            @scanner[3]]
-        end
+        scan \
+          /\|/  => :UNION,
+          /\$/  => :INTERSECT,
+          /--/  => :SDIFFERENCE,
+          /-/   => :DIFFERENCE,
+          /\*/  => :STAR,
+          /\+/  => :PLUS,
+          /\?/  => :OPTIONAL,
+          /\(/  => :LPAREN,
+          /\)/  => :RPAREN,
+          /\[/  => :LBRACK,
+          /\]/  => :RBRACK,
+          /\\"/ => :ESCAPED,
+          /\\'/ => :ESCAPED,
+          /\^/  => :INVERT,
+          /\{/  => :LBRACE,
+          /\}/  => :RBRACE,
+          />/   => :GREATER,
+          /</   => :LESSER,
+          /:/   => :COLON,
+          /,/   => :COMMA,
+          /%/   => :PERCENT,
+          /\$/  => :DOLLAR
       end
 
       def scan_character
-        if @scanner.scan(/(\\?[A-Za-z_])/)
-          tokens << [:CHARACTER, string_escapes(@scanner[1])]
-        end
+        scan /(\\?[A-Za-z_])/ => proc {
+          [:CHARACTER, string_escapes(@scanner[1])]
+        }
       end
 
       def scan_whitespace
         if @scanner.scan(/\s+/)
           true
         end
+      end
+
+      private
+
+      def scan(hash)
+        matched = false
+        hash.each do |key, value|
+          if @scanner.scan(key)
+            v = if value.is_a? Block
+              instance_exec(&value)
+            else
+              value
+            end
+
+            matched = true
+            tokens << [v].flatten(1)
+            break
+          end
+        end
+
+        yield if !matched and block_given?
+        matched
       end
 
       def error!

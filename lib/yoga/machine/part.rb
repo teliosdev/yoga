@@ -48,8 +48,19 @@ module Yoga
         transition.to if transition
       end
 
-      def contains_parts_from?(machine)
-        parts.any? { |_| machine.parts.include?(_) }
+      def contains_parts_from?(machine, options = {})
+        machine_parts = case
+        when options[:accepting] && options[:starting]
+          machine.parts.select { |_| _.accepting? || _.starting? }
+        when options[:accepting]
+          machine.accepting
+        when options[:Starting]
+          machine.starting
+        else
+          machine.parts
+        end
+
+        parts.any? { |_| machine_parts.include?(_) }
       end
 
       def rehash_transitions(machine)
@@ -74,8 +85,9 @@ module Yoga
       end
 
       def to_s
-        "#<#{self.class} #transitions=#{transitions.size} #parts=#{parts.size} id=#{id[0..9]} starting=#{starting?} accepting=#{accepting?}>"
-        id[0..9]
+        "#<#{self.class} #transitions=#{transitions.size} " \
+          "#parts=#{parts.size} id=#{id[0..9]} " \
+          "starting=#{starting?} accepting=#{accepting?}>"
       end
 
       alias_method :inspect, :to_s

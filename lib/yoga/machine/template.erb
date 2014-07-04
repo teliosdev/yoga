@@ -16,7 +16,7 @@ digraph machine {
 <% parts.each_with_index do |part, i| -%>
   p<%= part.id %> [label="<%= i %>" <% if part.accepting? %> shape="doublecircle" <% end %>];
 <%   part.transitions.each do |transition| %>
-    p<%= part.id %> -> p<%= transition.to.id %> [label="<%= transition.stringify %>"]
+    p<%= if part then part.id else "" end %> -> p<%= if transition.to then transition.to.id else "" end %> [label="<%= transition.stringify %>"]
 <%   end -%>
 <% end -%>
 

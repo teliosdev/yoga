@@ -2,46 +2,69 @@
 %require "~> 0.1"
 %type "ruby"
 
-%terminal STAR "*"
-%terminal PLUS "+"
-%terminal OPTIONAL "?"
-%terminal UNION "|"
-%terminal INTERSECT "&"
-%terminal SDIFFERENCE "--"
-%terminal DIFFERENCE "-"
-%terminal LPAREN "("
-%terminal RPAREN ")"
-%terminal LBRACK "["
-%terminal RBRACK "]"
-%terminal INVERT "^"
-%terminal ESCAPED
-%terminal CHARACTER
-%terminal STRING
-%terminal CONTAIN
-%terminal NUMBER
+%token STAR "*"
+%token PLUS "+"
+%token OPTIONAL "?"
+%token UNION "|"
+%token INTERSECT "&"
+%token SDIFFERENCE "--"
+%token DIFFERENCE "-"
+%token LPAREN "("
+%token RPAREN ")"
+%token LBRACK "["
+%token RBRACK "]"
+%token INVERT "^"
+%token LBRACE "{"
+%token RBRACE "}"
+%token GREATER ">"
+%token LESSER "<"
+%token COLON ":"
+%token COMMA ","
+%token PERCENT "%"
+%token DOLLAR "$"
+%token ESCAPED
+%token CHARACTER
+%token STRING
+%token NUMBER
 
+%nonassoc COLON
 %left UNION INTERSECT SDIFFERENCE DIFFERENCE
 %right CHARACTER NUMBER
 %left STAR PLUS OPTIONAL
+%nonassoc LBRACE RBRACE
 %nonassoc LPAREN RPAREN
 
 %%
 
-expression: group            { |_|    [_]          }
-          | group expression { |a, b| b.unshift(a) }
+main: expression             { |_| compile_paren(a) }
 
-group: group modifier        { |a, b|    compile_modifier(b, a) }
-     | group binop group     { |a, b, c| compile_binop(b, a, c) }
+expression: group            { |_|    [_]           }
+          | group expression { |a, b| b.unshift(a)  }
+
+group: group modifier        { |a, b|    compile_modifier(b, a)     }
+     | group binop group     { |a, b, c| compile_binop(b, a, c)     }
+     | group transitional    { |a, b|    compile_transitional(b, a) }
      | value
 
 modifier: STAR       { |_| _[0] }
         | PLUS       { |_| _[0] }
         | OPTIONAL   { |_| _[0] }
+        | LBRACE NUMBER RBRACE
+        | LBRACE COMMA NUMBER RBRACE
+        | LBRACE NUMBER COMMA RBRACE
+        | LBRACE NUMBER COMMA NUMBER RBRACE
 
 binop: UNION       { |_| _[0] }
      | INTERSECT   { |_| _[0] }
      | SDIFFERENCE { |_| _[0] }
      | DIFFERENCE  { |_| _[0] }
+
+transitional: COLON LESSER transitional.type chars NUMBER GREATER
+                { |_, _, a, b, c,_| [a, b, c]   }
+            | COLON LESSER transitional.type NUMBER GREATER
+                { |_, _, a, b, _|   [a, nil, b] }
+
+transitional.type: GREATER | LESSER | PERCENT | DOLLAR
 
 value: LPAREN expression RPAREN { |_, a, _| compile_paren(a)      }
      | STRING                   { |_|       compile_string(_)     }

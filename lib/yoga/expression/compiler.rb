@@ -139,6 +139,44 @@ module Yoga
         machine
       end
 
+      def compile_intersect(left, right)
+        union = compile_union(left, right)
+
+        union.determinitize!
+
+        union.accepting.each do |accept|
+          unless accept.contains_parts_from?(left) &&
+            accept.contains_parts_from?(right)
+            accept.accepting = false
+          end
+        end
+
+        union.minimize!
+      end
+
+      def compile_difference(left, right)
+        union = compile_union(left, right)
+        union.determinitize!
+
+        union.accepting.each do |accept|
+          if accept.contains_parts_from?(right, accepting: true)
+            accept.accepting = false
+          end
+        end
+
+        union#.minimize!
+      end
+
+      def compile_sdifference(left, right)
+        paren = compile_paren([
+          compile_star(lookup("any")),
+          right,
+          compile_star(lookup("any"))
+        ])
+
+        compile_difference(left, paren)
+      end
+
       private
 
       def ensure_minimal(machine)

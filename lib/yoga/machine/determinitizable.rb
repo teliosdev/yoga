@@ -13,19 +13,22 @@ module Yoga
       end
 
       def deterministic?
-        @deterministic == parts.hash
+        @deterministic
+      end
+
+      def deterministic=(new_value)
+        @deterministic = new_value
       end
 
       def determinitize!
         return self if deterministic?
 
-        minimize! unless minimal?
+        minimize_starting! unless minimal?
         starting = self.starting.first
         @old_parts, self.parts = self.parts, []
         part = determinitize_part(starting)
+        @deterministic = true
         part.starting = true
-        @deterministic = parts.hash
-        minimize!
 
         self
       end
