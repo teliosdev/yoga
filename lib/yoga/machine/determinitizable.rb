@@ -27,10 +27,12 @@ module Yoga
         return self if deterministic?
 
         minimize_starting unless minimal?
-        start = self.parts.create
-        start.parts = closure([starting.first])
-        start.accepting = start.parts.any?(&:accepting?)
+        first = starting.first
         @old_parts, self.parts = self.parts, []
+        start = self.parts.create
+        start.parts = closure([first])
+        start.accepting = start.parts.any?(&:accepting?)
+        start.starting = true
 
         workload = [start]
 
@@ -38,7 +40,7 @@ module Yoga
           part = workload.pop
 
           alphabet.each do |char|
-            moves = move(parts, char)
+            moves = move(part.parts, char)
 
             if moves.any?
               moves = closure(moves)
@@ -59,7 +61,11 @@ module Yoga
         end
 
         @deterministic = true
-        start.starting = true
+
+        minimize_transitions
+        minimize_nondistinct
+        minimize!
+        minimize_transitions
 
         self
       end
