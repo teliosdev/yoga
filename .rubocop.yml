@@ -1,0 +1,40 @@
+AllCops:
+  TargetRubyVersion: 2.3
+
+Metrics/LineLength:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 15
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/*.rb'
+    - 'spec/**/*.rb'
+Metrics/AbcSize:
+  Max: 25
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+Style/SignalException:
+  EnforcedStyle: only_fail
+Style/AccessModifierIndentation:
+  EnforcedStyle: outdent
+Style/Documentation:
+  Enabled: false
+Style/Encoding:
+  Enabled: true
+  EnforcedStyle: always
+  AutoCorrectEncodingComment: "# encoding: utf-8\n"
+Style/RegexpLiteral:
+  EnforcedStyle: mixed
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+Style/AlignHash:
+  EnforcedLastArgumentHashStyle: ignore_implicit
+Style/AlignArray:
+  Enabled: false
+Style/IndentArray:
+  Enabled: false
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+Style/ParallelAssignment:
+  Enabled: false

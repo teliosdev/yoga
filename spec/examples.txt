@@ -1,0 +1,22 @@
+example_id                            | status | run_time        |
+------------------------------------- | ------ | --------------- |
+./spec/yoga/location_spec.rb[1:1]     | passed | 0.0031 seconds  |
+./spec/yoga/location_spec.rb[1:2:1]   | passed | 0.00018 seconds |
+./spec/yoga/location_spec.rb[1:3]     | passed | 0.00073 seconds |
+./spec/yoga/location_spec.rb[1:4:1]   | passed | 0.00019 seconds |
+./spec/yoga/location_spec.rb[1:4:2]   | passed | 0.00017 seconds |
+./spec/yoga/location_spec.rb[1:4:3]   | passed | 0.00013 seconds |
+./spec/yoga/location_spec.rb[1:5:1:1] | passed | 0.00018 seconds |
+./spec/yoga/location_spec.rb[1:5:2:1] | passed | 0.00138 seconds |
+./spec/yoga/location_spec.rb[1:5:3]   | passed | 0.00017 seconds |
+./spec/yoga/location_spec.rb[1:6:1:1] | passed | 0.00016 seconds |
+./spec/yoga/location_spec.rb[1:6:2:1] | passed | 0.00013 seconds |
+./spec/yoga/location_spec.rb[1:6:2:2] | passed | 0.0001 seconds  |
+./spec/yoga/location_spec.rb[1:6:3]   | passed | 0.00014 seconds |
+./spec/yoga/scanner_spec.rb[1:1:1]    | passed | 0.00078 seconds |
+./spec/yoga/scanner_spec.rb[1:1:2]    | passed | 0.00112 seconds |
+./spec/yoga/token_spec.rb[1:1:1]      | passed | 0.00013 seconds |
+./spec/yoga/token_spec.rb[1:1:2]      | passed | 0.00013 seconds |
+./spec/yoga/token_spec.rb[1:1:3]      | passed | 0.00012 seconds |
+./spec/yoga/token_spec.rb[1:2:1]      | passed | 0.00019 seconds |
+./spec/yoga_spec.rb[1:1]              | passed | 0.0009 seconds  |
