@@ -7,7 +7,7 @@ RSpec.describe Yoga::Scanner do
   subject { Fixtures::Scanner.call(source) }
   let(:source) { "b = a + 2" }
   let(:tokens) do
-    [ t(:IDENT, "b", 1..2),
+    [t(:IDENT, "b", 1..2),
       t(:"=", "=", 3..4),
       t(:IDENT, "a", 5..6),
       t(:"+", "+", 7..8),
@@ -22,6 +22,14 @@ RSpec.describe Yoga::Scanner do
 
     it "parses correctly" do
       expect(subject.to_a).to eq tokens
+    end
+
+    context "with lines" do
+      let(:source) { "b = a + 2;\nb * 2;\n" }
+
+      it "includes lines" do
+        expect(subject.to_a[-3].location.line).to eq 2..2
+      end
     end
   end
 

@@ -113,7 +113,7 @@ module Yoga
       # @return [Yoga::Token]
       def peek
         if next?
-          @_last = @enum.peek
+          @_last = @tokens.peek
         else
           @_last
         end
@@ -125,7 +125,7 @@ module Yoga
       #
       # @return [::Boolean]
       def next?
-        @enum.peek
+        @tokens.peek
         true
       rescue StopIteration
         false
@@ -158,13 +158,13 @@ module Yoga
       # @return [::Array] The collected nodes from the yielding process.
       def collect(ending, join = nil)
         children = []
-        join = Array(join).flatten if join
-        ending = Array(ending).flatten if ending
+        join = Utils.flatten_into_set([join]) if join
+        ending = Utils.flatten_into_set([ending]) if ending
+
         return [] if (ending && peek?(ending)) || (!ending && !join)
 
         children << yield
-        until (ending && peek?(ending)) || (!ending && !peek?(join))
-          expect(join) if join
+        while (join && expect(join)) && !(ending && peek?(ending))
           children << yield
         end
 
@@ -179,7 +179,7 @@ module Yoga
       # @param tokens [<::Symbol>] The possible kinds.
       # @return [::Boolean]
       def peek?(*tokens)
-        tokens = flatten_into_set(tokens)
+        tokens = Utils.flatten_into_set(tokens)
         tokens.include?(peek.kind)
       end
 
@@ -187,9 +187,7 @@ module Yoga
       #
       # @return [Yoga::Token]
       def shift
-        token = @enum.next
-        @location = @location ? @location | token.location : token.location
-        token
+        @tokens.next
       end
 
       # Sets up an expectation for a given token.  If the next token is
@@ -199,7 +197,7 @@ module Yoga
       # @param tokens [<::Symbol>] The expected tokens.
       # @return [Yoga::Token]
       def expect(*tokens)
-        tokens = flatten_into_set(tokens)
+        tokens = Utils.flatten_into_set(tokens)
         return shift if peek?(*tokens)
         error(tokens.flatten)
       end
@@ -209,7 +207,7 @@ module Yoga
       # @param name [::Symbol]
       # @return [::Set<::Symbol>]
       def first(name)
-        self.class.firsts.fetch(name)
+        self.class.first(name)
       end
 
       # Errors, noting the expected tokens, the given token, the location
@@ -218,43 +216,8 @@ module Yoga
       # @param tokens [<::Symbol>] The expected tokens.
       # @return [void]
       def error(tokens)
-        expected = Array(tokens).flatten.map(&:inspect).join(", ")
-        fail ParseError, "Unexpected #{peek.kind.inspect}, expected one of " \
-          "#{expected} at #{peek.location}"
-      end
-
-      # Takes an array of tokens or set/array of tokens and turns it into a
-      # single set.
-      #
-      # @param tokens [<Yoga::Token, ::Set<Yoga::Token>, ::Enumerable>]
-      #   The array to flatten into a set.
-      # @return [::Set<Yoga::Token>]
-      def flatten_into_set(tokens)
-        set = ::Set.new
-        tokens.each do |t|
-          case t
-          when ::Set
-            set.merge(t)
-          when ::Enumerable
-            set.merge(flatten_into_set(t))
-          else
-            set << t
-          end
-        end
-
-        set
-      end
-
-      # Returns the location from the last shifted tokens since the location
-      # was last reset.  This allows locations to easily be collected over
-      # a location without having to dirty up code with location tracking code.
-      #
-      # @param reset [::Boolean] Whether or not to reset the location.
-      # @return [::Location]
-      def collect_locations(reset = true)
-        location = @location
-        @location = nil if reset
-        location || Location.default
+        fail Yoga::UnexpectedTokenError, expected: tokens, got: peek.kind,
+          location: peek.location
       end
 
       # Internal ruby construct.

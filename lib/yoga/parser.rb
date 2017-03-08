@@ -13,7 +13,6 @@ module Yoga
     # @param tokens [::Enumerable<Yoga::Token>]
     def initialize(tokens)
       @tokens = tokens
-      @location = nil
     end
 
     # Performs the parsing.

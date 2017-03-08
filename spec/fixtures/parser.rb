@@ -3,6 +3,8 @@
 
 module Fixtures
   class Parser
+    include Yoga::Parser
+
     class Root < Yoga::Node
       attribute :children, type: [Yoga::Node]
     end
@@ -15,13 +17,20 @@ module Fixtures
       attribute :name, type: ::String
     end
 
+    class Operation < Yoga::Node
+      attribute :left, type: Yoga::Node
+      attribute :right, type: Yoga::Node
+      attribute :kind, type: ::Symbol
+    end
+
     def parse_root
-      statements = collect([:EOF], [:";"]) { parse_statement }
+      statements = collect(:EOF, :";") { parse_statement }
       Root.new(children: statements,
-        location: statement.map(&:location).inject(:union))
+        location: statements.map(&:location).inject(:union))
     end
 
     def parse_statement
+      fail if peek?(:EOF)
       left = parse_atom
 
       while peek?([:"+", :"-", :"*", :"/", :"^", :"%", :"="])
@@ -33,28 +42,38 @@ module Fixtures
 
     def parse_atom
       if peek?(:NUMERIC)
-        Literal.new(value: expect(:NUMERIC).value, location: collect_locations)
+        numeric = expect(:NUMERIC)
+        Literal.new(value: numeric.value, location: numeric.location)
       elsif peek?(:"(")
         expect(:"(")
         statement = parse_statement
         expect(:")")
         statement
       else
-        Identifier.new(value: expect(:IDENT).value, location: collect_locations)
+        ident = expect(Set[:IDENT])
+        Identifier.new(name: ident.value, location: ident.location)
       end
     end
 
     switch(:Expression,
-      :"=" => proc { |left| Operator.new(kind: :"=", left: left, right: parse_atom, location: collect_locations) },
-      :"+" => proc { |left| Operator.new(kind: :"+", left: left, right: parse_atom, location: collect_locations) },
-      :"-" => proc { |left| Operator.new(kind: :"-", left: left, right: parse_atom, location: collect_locations) },
-      :"*" => proc { |left| Operator.new(kind: :"*", left: left, right: parse_atom, location: collect_locations) },
-      :"/" => proc { |left| Operator.new(kind: :"/", left: left, right: parse_atom, location: collect_locations) },
-      :"^" => proc { |left| Operator.new(kind: :"^", left: left, right: parse_atom, location: collect_locations) },
-      :"%" => proc { |left| Operator.new(kind: :"%", left: left, right: parse_atom, location: collect_locations) })
+      "=": proc { |left| parse_operation(:"=", left) },
+      "+": proc { |left| parse_operation(:"+", left) },
+      "-": proc { |left| parse_operation(:"-", left) },
+      "*": proc { |left| parse_operation(:"*", left) },
+      "/": proc { |left| parse_operation(:"/", left) },
+      "^": proc { |left| parse_operation(:"^", left) },
+      "%": proc { |left| parse_operation(:"%", left) })
 
     def parse_expression(left)
       switch(:Expression, left)
+    end
+
+    def parse_operation(symbol, left)
+      operator = expect(symbol)
+      right = parse_atom
+      location = operator.location.union(left.location, right.location)
+      Operation.new(kind: symbol, left: left, right: right,
+        location: location)
     end
   end
 end

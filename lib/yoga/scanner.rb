@@ -6,6 +6,16 @@ module Yoga
   # It is built to lazily scan whenever it is required, instead
   # of all at once.  This integrates nicely with the parser.
   module Scanner
+    # Initializes the scanner with the given source.  Once the
+    # source is set, it shouldn't be changed.
+    #
+    # @param source [::String] The source.
+    def initialize(source)
+      @source = source
+      @line = 1
+      @last_line_at = 0
+    end
+
     # @overload call(&block)
     #   For every token that is scanned, the block is yielded to.
     #
@@ -15,9 +25,9 @@ module Yoga
     #   Returns an enumerable over the tokens in the scanner.
     #
     #   @return [::Enumerable<Scanner::Token>]
-    def call(source)
-      return to_enum(:call, source) unless block_given?
-      @scanner = StringScanner.new(source)
+    def call
+      return to_enum(:call) unless block_given?
+      @scanner = StringScanner.new(@source)
       @line = 1
 
       until @scanner.eos?
@@ -57,9 +67,9 @@ module Yoga
     # @param size [::Numeric] The size of the token.
     # @return [Yoga::Location]
     def location(size = 0)
-      start = (@scanner.charpos - distance_from_line) + 1
+      start = (@scanner.charpos - @last_line_at) + 1
       column = (start - size)..start
-      Location.new(file, @line, column)
+      Location.new(file, current_line, column)
     end
 
     # Creates a scanner token with the given name and source.  This grabs the
@@ -93,16 +103,35 @@ module Yoga
                 else /#{::Regexp.escape(matcher.to_s)}/
                 end
 
-
       ((kind && emit(kind)) || true) if @scanner.scan(matcher)
     end
 
-    # The distance from the last line in the file.  This includes the start of
-    # the file as well.
+    # A regular expression to match all kinds of lines.  All of them.
+    #
+    # @return [::Regexp]
+    LINE_MATCHER = /\r\n|\n\r|\n|\r/
+
+    # Matches a line.  This is separate in order to allow internal logic,
+    # such as line counting and caching, to be performed.
+    #
+    # @return [Boolean] If the line was matched.
+    def match_line(kind = false)
+      match(LINE_MATCHER, kind).tap do |t|
+        break unless t
+        @line += 1
+        @last_line_at = @scanner.charpos
+      end
+    end
+
+    # Returns the number of lines that have been covered so far in the scanner.
+    # I recommend replacing this with an instance variable that caches the
+    # result of it, so that whenever you scan a new line, it just increments
+    # the line count.
     #
     # @return [::Numeric]
-    def distance_from_line
-      @scanner.string.rindex(/\A|\r\n|\n\r|\n|\r/, @scanner.charpos)
+    def current_line
+      # @scanner.string[0..@scanner.charpos].scan(/\A|\r\n|\n\r|\n|\r/).size
+      @line
     end
 
     # The negative assertion used for converting a symbol matcher to a regular

@@ -2,6 +2,8 @@
 # frozen_string_literal: true
 
 require "yoga/version"
+require "yoga/errors"
+require "yoga/utils"
 require "yoga/location"
 require "yoga/node"
 require "yoga/parser"

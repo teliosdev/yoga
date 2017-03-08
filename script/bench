@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require "benchmark/ips"
+require "ruby-prof"
+require "yoga/utils"
+
+VALUES = [
+  [[[[:x], :a], :b]],
+  [[Set[[:a], :x], :a]],
+  [[[[[[[[[[:x], :a], :c], :d], :e], :f], :d], :a], :a]]
+]
+
+if ARGV[0] == "mark"
+  Benchmark.ips do |bench|
+    VALUES.each_with_index do |e, i|
+      bench.report(i) do |times|
+        i = 0
+        while i < times
+          Yoga::Utils.flatten_into_set(e)
+          i += 1
+        end
+      end
+    end
+  end
+else
+  result = RubyProf.profile do
+    VALUES.each do |e|
+      100_000.times do
+        Yoga::Utils.flatten_into_set(e)
+      end
+    end
+  end
+
+  printer = RubyProf::MultiPrinter.new(result)
+  printer.print(path: "profile/flatten", profile: "flatten")
+end

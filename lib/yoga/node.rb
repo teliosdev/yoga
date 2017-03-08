@@ -35,6 +35,19 @@ module Yoga
       self.class.new(self.attributes.merge(attributes))
     end
 
+    # Returns whether or not the other object is equal to this one.
+    # If the other object is this opbject, it returns true; otherwise,
+    # if the other object is an instance of this object's class, and
+    # the attributes are equal, it returns true; otherwise, it returns
+    # false.
+    #
+    # @param other [::Object]
+    # @return [Boolean]
+    def ==(other)
+      equal?(other) || (other.is_a?(self.class) && \
+        attributes == other.attributes)
+    end
+
     # Prevents all calls to {#update}.  This is used on nodes that should
     # never be updated.  This is a stop-gap measure for incorrectly
     # configured projects.  This, in line with {#update}, creates

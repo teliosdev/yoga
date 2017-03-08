@@ -6,7 +6,7 @@ module Fixtures
     include Yoga::Scanner
 
     def self.call(source)
-      new.call(source)
+      new(source).call
     end
 
     def scan
@@ -16,9 +16,7 @@ module Fixtures
     end
 
     def scan_operators
-      match("<") || match(">") || match("=") || match("+") || match("%") ||
-        match("-") || match("/") || match("*") || match("^") || match(";") ||
-        match("(") || match(")")
+      %w(< > = + % - / * ^ ; ( )).inject(false) { |a, e| a || match(e) }
     end
 
     def scan_keywords
@@ -30,7 +28,7 @@ module Fixtures
     end
 
     def scan_space
-      match(/\s+/, false)
+      match_line || match(/\s+/, false)
     end
   end
 end
