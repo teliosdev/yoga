@@ -189,7 +189,7 @@ module Yoga
       def shift
         @tokens.next
       rescue ::StopIteration
-        fail InvalidShiftError.new(location: peek.location)
+        fail InvalidShiftError, location: peek.location
       end
 
       # Sets up an expectation for a given token.  If the next token is
