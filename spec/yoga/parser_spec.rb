@@ -58,7 +58,10 @@ RSpec.describe Yoga::Parser do
 
       it "repeats the EOF token" do
         expect(subject.peek.kind).to eq :EOF
-        expect { subject.expect(:EOF) }.to_not raise_error(Yoga::Error)
+      end
+
+      it "fails on shift" do
+        expect { subject.shift }.to raise_error(Yoga::InvalidShiftError)
       end
     end
   end

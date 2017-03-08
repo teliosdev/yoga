@@ -1,7 +1,12 @@
+# encoding: utf-8
+# frozen_string_literal: true
 
 module Yoga
+  # Utilities used with the Yoga module.
+  #
+  # @api private
   module Utils
-    module_function
+  module_function
 
     # Takes an array of tokens or set/array of tokens and turns it into a
     # single set.

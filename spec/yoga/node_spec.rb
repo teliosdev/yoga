@@ -9,7 +9,7 @@ RSpec.describe Yoga::Node do
   let(:location) { Yoga::Location.default }
 
   context "#update" do
-    let(:updated)  { subject.update(update_data) }
+    let(:updated) { subject.update(update_data) }
     let(:update_data) { { value: 2 } }
     it "updates a given attribute" do
       expect(updated.value).to eq 2
@@ -32,7 +32,7 @@ RSpec.describe Yoga::Node do
     end
 
     it "allows updates on the original" do
-      expect { subject.update(value: 2) }.not_to raise_error(::StandardError)
+      expect { subject.update(value: 2) }.not_to raise_error
     end
   end
 end
