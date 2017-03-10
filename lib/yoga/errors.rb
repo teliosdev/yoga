@@ -33,6 +33,22 @@ module Yoga
     attr_reader :location
   end
 
+  # An error that occurred with scanning.
+  #
+  # @api private
+  class ScanError < LocationError; end
+
+
+  # An unexpected character was encountered while scanning.
+  #
+  # @api private
+  class UnexpectedCharacterError < LocationError
+    # (see Error#generate_message)
+    private def generate_message
+      "An unexpected character was encountered at #{@location}"
+    end
+  end
+
   # An error that occurred with parsing.
   #
   # @api private

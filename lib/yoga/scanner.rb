@@ -6,12 +6,19 @@ module Yoga
   # It is built to lazily scan whenever it is required, instead
   # of all at once.  This integrates nicely with the parser.
   module Scanner
+    # The file of the scanner.  This can be overwritten to provide a descriptor
+    # for the file.
+    #
+    # @return [::String]
+    attr_reader :file
+
     # Initializes the scanner with the given source.  Once the
     # source is set, it shouldn't be changed.
     #
     # @param source [::String] The source.
-    def initialize(source)
+    def initialize(source, file)
       @source = source
+      @file = file
       @line = 1
       @last_line_at = 0
     end
@@ -32,10 +39,10 @@ module Yoga
 
       until @scanner.eos?
         value = scan
-        yield value if value.is_a?(Token)
+        yield value unless value == true || !value
       end
 
-      yield Token.eof(location)
+      yield eof_token
       self
     end
 
@@ -53,7 +60,7 @@ module Yoga
       fail NotImplementedError, "Please implement #{self.class}#scan"
     end
 
-  private
+  protected
 
     # Returns a location at the given location.  If a size is given, it reduces
     # the column number by the size and returns the size from that.
@@ -115,12 +122,12 @@ module Yoga
     # such as line counting and caching, to be performed.
     #
     # @return [Boolean] If the line was matched.
-    def match_line(kind = false)
-      match(LINE_MATCHER, kind).tap do |t|
-        break unless t
-        @line += 1
-        @last_line_at = @scanner.charpos
-      end
+    def match_line(kind: false, required: false)
+      result = @scanner.scan(LINE_MATCHER)
+      (required ? return : fail UnexpectedCharacterError) unless result
+      @line += 1
+      @last_line_at = @scanner.charpos
+      (kind && emit(kind)) || true
     end
 
     # Returns the number of lines that have been covered so far in the scanner.
@@ -145,12 +152,11 @@ module Yoga
       "(?![a-zA-Z])"
     end
 
-    # The file of the scanner.  This can be overwritten to provide a descriptor
-    # for the file.
+    # Returns a token that denotes that the scanner is done scanning.
     #
-    # @return [::String]
-    def file
-      @file ||= "<anon>"
+    # @return [Yoga::Token]
+    def eof_token
+      emit(:EOF, "")
     end
   end
 end
