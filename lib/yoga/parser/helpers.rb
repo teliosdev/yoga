@@ -179,10 +179,13 @@ module Yoga
         return [] if (ending && peek?(ending)) || (!ending && !join)
 
         children << yield
-        while (join && expect(join)) && !(ending && peek?(ending))
-          children << yield
+
+        cond = proc do
+          (join ? peek?(join) && expect(join) : true) &&
+            !(ending && peek?(ending))
         end
 
+        (children << yield) while cond.call
         children
       end
 

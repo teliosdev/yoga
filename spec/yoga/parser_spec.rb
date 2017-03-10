@@ -113,6 +113,26 @@ RSpec.describe Yoga::Parser do
     end
   end
 
+  context "#collect" do
+    context "without a join" do
+      let(:source) { "= = = = =" }
+
+      it "parses properly" do
+        collected = subject.collect(:EOF) { subject.expect(:"=") }
+        expect(collected.size).to be 5
+      end
+    end
+    
+    context "With a join" do
+      let(:source) { "= + = + = =" }
+      
+      it "parses properly" do
+        collected = subject.collect(:EOF, :+) { subject.expect(:"=") }
+        expect(collected.size).to be 3
+      end
+    end
+  end
+
   def n(name, opts)
     Fixtures::Parser.const_get(name).new(opts)
   end
