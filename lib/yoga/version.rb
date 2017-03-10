@@ -5,5 +5,5 @@ module Yoga
   # The version of the module.
   #
   # @return [::String]
-  VERSION = "0.2.0"
+  VERSION = "0.2.1"
 end
