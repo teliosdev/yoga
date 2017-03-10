@@ -1,6 +1,8 @@
 # encoding: utf-8
 # frozen_string_literal: true
 
+require "strscan"
+
 module Yoga
   # A scanner.  This performs scanning over a series of tokens.
   # It is built to lazily scan whenever it is required, instead
@@ -94,7 +96,7 @@ module Yoga
     # A regular expression to match all kinds of lines.  All of them.
     #
     # @return [::Regexp]
-    LINE_MATCHER = /\r\n|\n\r|\n|\r/
+    LINE = /\r\n|\n\r|\n|\r/
 
     # Attempts to match the given token.  The first argument can be a string,
     # a symbol, or a regular expression.  If the matcher is a symbol, it's
@@ -129,7 +131,7 @@ module Yoga
     #
     # @return [Boolean] If the line was matched.
     def match_line(kind = false)
-      match(LINE_MATCHER, kind)
+      match(LINE, kind)
     end
 
     # Returns the number of lines that have been covered so far in the scanner.
@@ -167,10 +169,10 @@ module Yoga
     # @api private
     # @return [void]
     def update_line_information
-      return unless (lines = @scanner[0].scan(LINE_MATCHER)).any?
+      return unless (lines = @scanner[0].scan(LINE)).any?
       @line += lines.size
       @last_line_at =
-        @scanner.string.rindex(LINE_MATCHER, @scanner.charpos) + 1
+        @scanner.string.rindex(LINE, @scanner.charpos) + 1
     end
   end
 end
