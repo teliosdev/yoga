@@ -91,6 +91,11 @@ module Yoga
       Token.new(kind.freeze, source.freeze, location(source.length))
     end
 
+    # A regular expression to match all kinds of lines.  All of them.
+    #
+    # @return [::Regexp]
+    LINE_MATCHER = /\r\n|\n\r|\n|\r/
+
     # Attempts to match the given token.  The first argument can be a string,
     # a symbol, or a regular expression.  If the matcher is a symbol, it's
     # coerced into a regular expression, with a forward negative assertion for
@@ -98,7 +103,9 @@ module Yoga
     # {#symbol_negative_assertion}).  If the matcher is a regular expression,
     # it is left alone.  Otherwise, `#to_s` is called and passed to
     # `Regexp.escape`.  If the text is matched at the current position, a token
-    # is returned; otherwise, nil is returned.
+    # is returned; otherwise, nil is returned.  If a newline is matched within
+    # a match, the scanner automatically updates the line and column
+    # information.
     #
     # @param matcher [::Symbol, ::Regexp, #to_s]
     # @param kind [::Symbol] The kind of token to emit.  This defaults to a
@@ -111,25 +118,18 @@ module Yoga
                 else /#{::Regexp.escape(matcher.to_s)}/
                 end
 
-      ((kind && emit(kind)) || true) if @scanner.scan(matcher)
-    end
+      return unless @scanner.scan(matcher)
 
-    # A regular expression to match all kinds of lines.  All of them.
-    #
-    # @return [::Regexp]
-    LINE_MATCHER = /\r\n|\n\r|\n|\r/
+      update_line_information
+      ((kind && emit(kind)) || true)
+    end
 
     # Matches a line.  This is separate in order to allow internal logic,
     # such as line counting and caching, to be performed.
     #
     # @return [Boolean] If the line was matched.
-    def match_line(kind: false, required: false)
-      result = @scanner.scan(LINE_MATCHER)
-      (required ? (fail UnexpectedCharacterError, location: location) : return) \
-        unless result
-      @line += 1
-      @last_line_at = @scanner.charpos
-      (kind && emit(kind)) || true
+    def match_line(kind = false)
+      match(LINE_MATCHER, kind)
     end
 
     # Returns the number of lines that have been covered so far in the scanner.
@@ -159,6 +159,18 @@ module Yoga
     # @return [Yoga::Token]
     def eof_token
       emit(:EOF, "")
+    end
+
+    # Updates the line information for the scanner.  This is called for any
+    # successful matches.
+    #
+    # @api private
+    # @return [void]
+    def update_line_information
+      return unless (lines = @scanner[0].scan(LINE_MATCHER)).any?
+      @line += lines.size
+      @last_line_at =
+        @scanner.string.rindex(LINE_MATCHER, @scanner.charpos) + 1
     end
   end
 end
