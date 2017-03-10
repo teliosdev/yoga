@@ -16,7 +16,8 @@ module Yoga
     # source is set, it shouldn't be changed.
     #
     # @param source [::String] The source.
-    def initialize(source, file)
+    # @param file [::String] The file the scanner comes from.
+    def initialize(source, file = "<anon>")
       @source = source
       @file = file
       @line = 1
@@ -124,7 +125,8 @@ module Yoga
     # @return [Boolean] If the line was matched.
     def match_line(kind: false, required: false)
       result = @scanner.scan(LINE_MATCHER)
-      (required ? return : fail UnexpectedCharacterError) unless result
+      (required ? (fail UnexpectedCharacterError, location: location) : return) \
+        unless result
       @line += 1
       @last_line_at = @scanner.charpos
       (kind && emit(kind)) || true

@@ -38,7 +38,6 @@ module Yoga
   # @api private
   class ScanError < LocationError; end
 
-
   # An unexpected character was encountered while scanning.
   #
   # @api private

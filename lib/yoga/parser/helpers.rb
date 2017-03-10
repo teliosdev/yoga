@@ -142,7 +142,8 @@ module Yoga
       # @return [::Object] The result of calling the block.
       def switch(name, *param)
         switch = self.class.switch(name)
-        block = switch.fetch(peek.kind) { error(switch.keys) }
+        block = switch
+                .fetch(peek.kind) { switch.fetch(:$else) { error(switch.keys) } }
         instance_exec(*param, &block)
       end
 

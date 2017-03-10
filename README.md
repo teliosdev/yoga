@@ -5,7 +5,8 @@ A helper for your Ruby parsers.  This adds helper methods to make parsing
 (and scanning!) easier and more structured.  If you're looking for an LALR
 parser generator, that isn't this.  This is designed to help you construct
 Recursive Descent parsers - which are solely LL(k).  If you want an LALR parser
-generator, see [_Antelope_](https://github.com/medcat/antelope) or [Bison](https://www.gnu.org/software/bison/).
+generator, see [_Antelope_](https://github.com/medcat/antelope) or
+[Bison](https://www.gnu.org/software/bison/).
 
 Yoga requires [Mixture](https://github.com/medcat/mixture) for parser node
 attributes.  However, the use of the parser nodes included with Yoga are
@@ -134,11 +135,114 @@ module MyLanguage
 end
 ```
 
-With those out of the way, let's take a look at the
+With those out of the way, let's take a look at the parser itself.
 
-## Development
+```ruby
+module MyLanguage
+  class Parser
+    # This provides all of the parser helpers.  This is the same as adding
+    # `Yoga::Parser::Helpers` as an include statement as well.
+    include Yoga::Parser
+
+    # Like the `scan/0` method on the scanner, this must be implemented.  This
+    # is the entry point for the parser.  However, public usage should use the
+    # `call/0` method.  This should return a node of some sort.
+    def parse_root
+      # This "collects" a series of nodes in sequence.  It iterates until it
+      # reaches the `:EOF` token (in this case).  The first parameter to
+      # collect is the "terminating token," and can be any value that
+      # `expect/1` or `peek?/1` accepts.  The second, optional parameter to
+      # collect is the "joining token," and is required between each node.
+      # We're not using the semicolon as a joining token because that is
+      # required for _all_ statements.  The joining token can be used for
+      # things like argument lists.  The parameter can be any value that
+      # `expect/1` or `peek?/1` accepts.
+      children = collect(:EOF) { parse_statement }
+
+      # "Unions" the location of all of the statements in the list.
+      location = children.map(&:location).inject(:union)
+      Parser::Root.new(statements: children, location: location)
+    end
+
+    # Parses a statement.  This is the same as the <statement> rule as above.
+    def parse_statement
+      expression = parse_expression
+      # This says that the next token should be a semicolon.  If the next token
+      # isn't, it throws an error with a detailed error message, denoting
+      # what was expected (in this case, a semicolon), what was given, and
+      # where the error was located in the source file.
+      expect(:";")
+
+      expression
+    end
 
 
+    # A switch statement, essentially.  This is defined beforehand to make it
+    # _faster_ (not really; it's just useful).  The first parameter to the
+    # switch function is the name of the switch.  This is used later to
+    # actually perform the switch; it is also used to define a first set with
+    # the allowed tokens for the switch.  The second parameter defines a key
+    # value pair.  The keys are the tokens that are allowed; a symbol or an
+    # array of symbols can be used.  The value is the block or the method that
+    # is executed upon encountering that token.
+    switch(:Operation,
+      "=": proc { |left| parse_operation(:"=", left) },
+      "+": proc { |left| parse_operation(:"+", left) },
+      "-": proc { |left| parse_operation(:"-", left) },
+      "*": proc { |left| parse_operation(:"*", left) },
+      "/": proc { |left| parse_operation(:"/", left) },
+      "^": proc { |left| parse_operation(:"^", left) },
+      "%": proc { |left| parse_operation(:"%", left) })
+
+    def parse_expression
+      # Parse a literal.  All expressions must contain a literal of some sort;
+      # we're just going to use a numeric literal here.
+      left = parse_expression_literal
+
+      # Whenever the `.switch` function is called, it creates a
+      # "first set" that can be used like this.  The first set consists of
+      # a set of tokens that are allowed for the switch statement.  In this
+      # case, it just makes sure that the next token is an operator.  If it
+      # is, it parses it as an operation.
+      if peek?(first(:Operation))
+        # Uses the switch defined below.  If a token is found as a key, its
+        # block is executed; otherwise, it errors, giving a detailed error of
+        # what was expected.
+        switch(:Operation, left)
+      else
+        left
+      end
+    end
+
+    def parse_operation(op, left)
+      token = expect(op)
+      right = parse_expression
+
+      Parser::Operation.new(left: left, op: op, right: right, location:
+        left.location | op.location | right.location)
+    end
+
+    def parse_expression_literal
+      token = expect(:NUMERIC)
+      Parser::Literal.new(value: token.value, location: token.location)
+    end
+  end
+end
+```
+
+This parser can then be used as such:
+
+```ruby
+source = "a = 2;\nb = a + 2;\n"
+scanner = MyLanguage::Scanner.new(source).call
+MyLanguage::Parser.new(scanner).call # => #<MyLanguage::Parser::Root ...>
+```
+
+That's about it!  If you have any questions, you can email me at
+<jeremy.rodi@medcat.me>, open an issue, or do what you like.
+
+For more documentation, see [the Documentation][documentation] - Yoga has a
+requirement of 100% documentation.
 
 ## Contributing
 
@@ -148,6 +252,7 @@ welcoming space for collaboration, and contributors are expected to adhere to
 the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 [build-status]: https://travis-ci.org/medcat/yoga.svg?branch=master
+[documentation]: http://www.rubydoc.info/github/medcat/yoga/master
 [coverage-status]: https://coveralls.io/repos/github/medcat/yoga/badge.svg?branch=master
 [build-status-link]: https://travis-ci.org/medcat/yoga
 [coverage-status-link]: https://coveralls.io/github/medcat/yoga?branch=master
