@@ -74,6 +74,45 @@ RSpec.describe Yoga::Parser do
     end
   end
 
+  context "#peek_out" do
+    it "properly peeks" do
+      expect(subject.peek_out(2).kind).to eq :IDENT
+    end
+
+    it "returns the same value" do
+      10.times do
+        expect(subject.peek_out(2).kind).to eq :IDENT
+      end
+    end
+
+    context "with a far out index" do
+      it "returns the last available token" do
+        expect(subject.peek_out(999).kind).to eq :EOF
+      end
+    end
+  end
+
+  context "#push_out?" do
+    it "properly peeks" do
+      expect(subject.peek_out?(2, :IDENT)).to be true
+      expect(subject.peek_out?(1, :NOPE)).to be false
+    end
+  end
+
+  context "#push" do
+    it "makes a token peek" do
+      token = subject.shift
+      subject.push(token)
+      expect(subject.peek).to be token
+    end
+
+    it "makes a token shift" do
+      token = subject.shift
+      subject.push(token)
+      expect(subject.shift).to be token
+    end
+  end
+
   def n(name, opts)
     Fixtures::Parser.const_get(name).new(opts)
   end

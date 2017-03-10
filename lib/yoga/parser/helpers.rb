@@ -112,24 +112,38 @@ module Yoga
       #
       # @return [Yoga::Token]
       def peek
-        if next?
-          @_last = @tokens.peek
-        else
-          @_last
-        end
+        @_last = (@buffer.any? ? @buffer.first : @tokens.peek)
+      rescue ::StopIteration
+        @_last
       end
 
-      # Checks if the next token exists.  It does this by checking for a
-      # `StopIteration` error.  This is actually really slow, but there's
-      # not much else I can do.
+      # Peeks out to a given token.  If peeking would cause a `StopIteration`
+      # error, it instead returns the last value that was peeked.  This is
+      # an expensive operation, and should be used sparingly.  All other
+      # methods work as normal, even after this.
       #
-      # @return [::Boolean]
-      def next?
-        @tokens.peek
-        true
-      rescue StopIteration
-        false
+      # @param to [::Numeric] The distance to peek to.
+      # @return [Yoga::Token]
+      def peek_out(to)
+        return @buffer[to] if to <= @buffer.size
+        (to - @buffer.size + 1).times { @buffer << @tokens.next }
+        @buffer.last
+      rescue ::StopIteration
+        @buffer.last
       end
+
+      # Pushes back tokens onto the buffer.  These, in reverse order, are
+      # the tokens that are pulled out by `peek/1`, `peek_to/1`, `expect/1`,
+      # and `shift/1`.
+      #
+      # @param tokens [<Yoga::Token>]
+      # @return [self]
+      def push(*tokens)
+        tokens.each { |t| @buffer.push(t) }
+        self
+      end
+
+      alias_method :<<, :push
 
       # Switches the function executed based on the given nodes.  If the
       # peeked node matches one of the mappings, it calls the resulting
@@ -140,10 +154,10 @@ module Yoga
       # @see ClassMethods#switch
       # @param name [::Symbol] The name of the switch to use.
       # @return [::Object] The result of calling the block.
-      def switch(name, *param)
+      def switch(name, *param, token: peek)
         switch = self.class.switch(name)
         block = switch
-                .fetch(peek.kind) { switch.fetch(:$else) { error(switch.keys) } }
+                .fetch(token.kind) { switch.fetch(:$else) { error(switch.keys) } }
         instance_exec(*param, &block)
       end
 
@@ -184,11 +198,24 @@ module Yoga
         tokens.include?(peek.kind)
       end
 
+      # Peeks out to a specific point in the future to match.  This is an
+      # expensive operation.
+      #
+      # @see #peek?
+      # @see peek_out
+      # @param to [::Numeric] The distance to peek to.
+      # @param tokens [<::Symbol>] The kinds of tokens to check for.
+      # @return [::Boolean]
+      def peek_out?(to, tokens)
+        tokens = Utils.flatten_into_set([tokens])
+        tokens.include?(peek_out(to).kind)
+      end
+
       # Shifts to the next token, and returns the old token.
       #
       # @return [Yoga::Token]
       def shift
-        @tokens.next
+        @buffer.any? ? @buffer.shift : @tokens.next
       rescue ::StopIteration
         fail InvalidShiftError, location: peek.location
       end

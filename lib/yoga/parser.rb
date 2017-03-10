@@ -13,6 +13,7 @@ module Yoga
     # @param tokens [::Enumerable<Yoga::Token>]
     def initialize(tokens)
       @tokens = tokens
+      @buffer = []
     end
 
     # Performs the parsing.
