@@ -122,10 +122,10 @@ RSpec.describe Yoga::Parser do
         expect(collected.size).to be 5
       end
     end
-    
+
     context "With a join" do
       let(:source) { "= + = + = =" }
-      
+
       it "parses properly" do
         collected = subject.collect(:EOF, :+) { subject.expect(:"=") }
         expect(collected.size).to be 3
