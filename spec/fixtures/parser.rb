@@ -24,13 +24,13 @@ module Fixtures
     end
 
     def parse_root
-      statements = collect(:EOF, :";") { parse_statement }
+      statements = collect([:EOF], [:";"]) { parse_statement }
       Root.new(children: statements,
         location: statements.map(&:location).inject(:union))
     end
 
     def parse_statement
-      fail if peek?(:EOF)
+      fail if peek?([:EOF])
       left = parse_atom
 
       while peek?([:"+", :"-", :"*", :"/", :"^", :"%", :"="])
@@ -41,13 +41,13 @@ module Fixtures
     end
 
     def parse_atom
-      if peek?(:NUMERIC)
-        numeric = expect(:NUMERIC)
+      if peek?([:NUMERIC])
+        numeric = expect([:NUMERIC])
         Literal.new(value: numeric.value, location: numeric.location)
-      elsif peek?(:"(")
-        expect(:"(")
+      elsif peek?([:"("])
+        expect([:"("])
         statement = parse_statement
-        expect(:")")
+        expect([:")"])
         statement
       else
         ident = expect(Set[:IDENT])
@@ -69,7 +69,7 @@ module Fixtures
     end
 
     def parse_operation(symbol, left)
-      operator = expect(symbol)
+      operator = expect([symbol])
       right = parse_atom
       location = operator.location.union(left.location, right.location)
       Operation.new(kind: symbol, left: left, right: right,

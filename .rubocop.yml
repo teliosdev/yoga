@@ -38,3 +38,5 @@ Style/Alias:
   EnforcedStyle: prefer_alias_method
 Style/ParallelAssignment:
   Enabled: false
+Style/NumericPredicate:
+  Enabled: false

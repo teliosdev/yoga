@@ -54,7 +54,7 @@ RSpec.describe Yoga::Parser do
     end
 
     context "after the EOF token" do
-      before { subject.expect(:EOF) }
+      before { subject.expect([:EOF]) }
 
       it "repeats the EOF token" do
         expect(subject.peek.kind).to eq :EOF
@@ -94,8 +94,8 @@ RSpec.describe Yoga::Parser do
 
   context "#push_out?" do
     it "properly peeks" do
-      expect(subject.peek_out?(2, :IDENT)).to be true
-      expect(subject.peek_out?(1, :NOPE)).to be false
+      expect(subject.peek_out?(2, [:IDENT])).to be true
+      expect(subject.peek_out?(1, [:NOPE])).to be false
     end
   end
 
@@ -118,7 +118,7 @@ RSpec.describe Yoga::Parser do
       let(:source) { "= = = = =" }
 
       it "parses properly" do
-        collected = subject.collect(:EOF) { subject.expect(:"=") }
+        collected = subject.collect([:EOF]) { subject.expect([:"="]) }
         expect(collected.size).to be 5
       end
     end
@@ -127,9 +127,15 @@ RSpec.describe Yoga::Parser do
       let(:source) { "= + = + = =" }
 
       it "parses properly" do
-        collected = subject.collect(:EOF, :+) { subject.expect(:"=") }
+        collected = subject.collect([:EOF], [:+]) { subject.expect([:"="]) }
         expect(collected.size).to be 3
       end
+    end
+  end
+
+  context "#peek?" do
+    it "requires an enumerable" do
+      expect { subject.peek?(:"=") }.to raise_error(::NoMethodError)
     end
   end
 

@@ -171,8 +171,8 @@ module Yoga
     def update_line_information
       return unless (lines = @scanner[0].scan(LINE)).any?
       @line += lines.size
-      @last_line_at =
-        @scanner.string.rindex(LINE, @scanner.charpos) + 1
+      line_index = @scanner.string.rindex(LINE, @scanner.charpos)
+      @last_line_at = line_index < 0 ? 0 : line_index + 1
     end
   end
 end

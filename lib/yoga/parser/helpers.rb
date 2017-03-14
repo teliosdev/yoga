@@ -173,8 +173,8 @@ module Yoga
       # @return [::Array] The collected nodes from the yielding process.
       def collect(ending, join = nil)
         children = []
-        join = Utils.flatten_into_set([join]) if join
-        ending = Utils.flatten_into_set([ending]) if ending
+        join = Utils.flatten_into_set(join) if join
+        ending = Utils.flatten_into_set(ending) if ending
 
         return [] if (ending && peek?(ending)) || (!ending && !join)
 
@@ -196,9 +196,8 @@ module Yoga
       #
       # @param tokens [<::Symbol>] The possible kinds.
       # @return [::Boolean]
-      def peek?(*tokens)
-        tokens = Utils.flatten_into_set(tokens)
-        tokens.include?(peek.kind)
+      def peek?(tokens)
+        Utils.flatten_into_set(tokens).include?(peek.kind)
       end
 
       # Peeks out to a specific point in the future to match.  This is an
@@ -210,8 +209,7 @@ module Yoga
       # @param tokens [<::Symbol>] The kinds of tokens to check for.
       # @return [::Boolean]
       def peek_out?(to, tokens)
-        tokens = Utils.flatten_into_set([tokens])
-        tokens.include?(peek_out(to).kind)
+        Utils.flatten_into_set(tokens).include?(peek_out(to).kind)
       end
 
       # Shifts to the next token, and returns the old token.
@@ -229,10 +227,10 @@ module Yoga
       #
       # @param tokens [<::Symbol>] The expected tokens.
       # @return [Yoga::Token]
-      def expect(*tokens)
+      def expect(tokens)
         tokens = Utils.flatten_into_set(tokens)
-        return shift if peek?(*tokens)
-        error(tokens.flatten)
+        return shift if peek?(tokens)
+        error(tokens)
       end
 
       # Retrieves the first set for the given node name.
