@@ -71,7 +71,7 @@ module Fixtures
     def parse_operation(symbol, left)
       operator = expect([symbol])
       right = parse_atom
-      location = operator.location.union(left.location, right.location)
+      location = operator.location | left.location | right.location
       Operation.new(kind: symbol, left: left, right: right,
         location: location)
     end

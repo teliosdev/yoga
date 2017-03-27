@@ -91,6 +91,9 @@ module Yoga
         @line == other.line && @column == other.column
     end
 
+    # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/CyclomaticComplexity
+
     # Unions this location with another location.  This creates a new location,
     # with the two locations combined.  A conflict in the file name causes an
     # error to be raised.
@@ -117,35 +120,27 @@ module Yoga
     # @raise [::ArgumentError] if other's file isn't the receiver's file.
     # @param others [Location]
     # @return [Location]
-    def union(*others)
-      others.each do |other|
-        fail ArgumentError, "Expected #{self.class}, got #{other.class}" \
-          unless other.is_a?(Location)
-        fail ArgumentError, "Expected other to have the same file" unless
-          file == other.file
-      end
+    def union(other)
+      fail ArgumentError, "Expected #{self.class}, got #{other.class}" \
+        unless other.is_a?(Location)
 
-      line = construct_range([@line, *others.map(&:line)])
-      column = construct_range([@column, *others.map(&:column)])
+      oline = other.line
+      ocolumn = other.column
 
-      Location.new(@file, line, column)
+      file = @file == other.file ? @file : "<unknown>"
+      line =
+        (@line.first < oline.first ? @line.first : oline.first)..
+        (@line.last > oline.last ? @line.last : oline.last)
+      column =
+        (@column.first < ocolumn.first ? @column.first : ocolumn.first)..
+        (@column.last > ocolumn.last ? @column.last : ocolumn.last)
+
+      Location.new(file, line, column)
     end
 
     alias_method :|, :union
 
   private
-
-    # Creates a range from a list of ranges.  This takes the lowest starting
-    # value, and the greatest ending value, and creates a new range from that.
-    #
-    # @param from [<::Range<::Numeric>>]
-    # @return [::Range<::Numeric>]
-    def construct_range(from)
-      first = from.map(&:first).min
-      last = from.map(&:last).max
-
-      first..last
-    end
 
     # Ensures that the given value is a range.  If it's numeric, it's turned
     # into a range with the same starting and ending values.  If it's a range,

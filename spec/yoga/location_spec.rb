@@ -50,8 +50,12 @@ RSpec.describe Yoga::Location do
     context "with a mismatched file" do
       let(:other_file) { "some/test.br" }
 
-      it "fails" do
-        expect { union }.to raise_error(::ArgumentError)
+      it "succeeds" do
+        expect { union }.to_not raise_error
+      end
+
+      it "sets the file" do
+        expect(union.file).to eq "<unknown>"
       end
     end
 
